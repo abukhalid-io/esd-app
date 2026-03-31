@@ -963,7 +963,7 @@ async function doLogin() { // Make it async
   const user = USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === pw);
   if (!user) {
     loginAttempts++;
-    showAlert('loginAlert','danger',`Username/password salah. (${5-loginAttempts) percobaan tersisa)`);
+    showAlert('loginAlert','danger','Username/password salah. (' + (5-loginAttempts) + ' percobaan tersisa)');
     return;
   }
   loginAttempts = 0;
