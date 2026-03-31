@@ -941,6 +941,58 @@ function togglePwd() {
   else { f.type='password'; i.className='bi bi-eye'; }
 }
 
+// Load saved credentials on page load
+function loadSavedCredentials() {
+  const savedUser = localStorage.getItem('pdmesd_saved_username');
+  const savedPw = localStorage.getItem('pdmesd_saved_password');
+  const rememberMe = localStorage.getItem('pdmesd_remember');
+  
+  if (savedUser && savedPw && rememberMe === 'true') {
+    document.getElementById('loginUsername').value = savedUser;
+    document.getElementById('loginPassword').value = savedPw;
+    document.getElementById('rememberMe').checked = true;
+  }
+}
+
+async function doLogin() { // Make it async
+  if (loginAttempts >= 5) { showAlert('loginAlert','danger','Terlalu banyak percobaan. Coba lagi nanti.'); return; }
+  const username = document.getElementById('loginUsername').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  const rememberMe = document.getElementById('rememberMe').checked;
+  
+  const user = USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === pw);
+  if (!user) {
+    loginAttempts++;
+    showAlert('loginAlert','danger',`Username/password salah. (${5-loginAttempts) percobaan tersisa)`);
+    return;
+  }
+  loginAttempts = 0;
+  currentUser = user;
+  
+  // Save credentials if "Ingat saya" is checked
+  if (rememberMe) {
+    localStorage.setItem('pdmesd_saved_username', username);
+    localStorage.setItem('pdmesd_saved_password', pw);
+    localStorage.setItem('pdmesd_remember', 'true');
+  } else {
+    localStorage.removeItem('pdmesd_saved_username');
+    localStorage.removeItem('pdmesd_saved_password');
+    localStorage.setItem('pdmesd_remember', 'false');
+  }
+  
+  document.getElementById('userDisplay').textContent = user.name;
+  document.getElementById('userEmail').textContent = user.username + ' (' + user.role + ')';
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appPage').style.display = 'block';
+  await loadState(); // Await the async loadState
+  updateDashboard();
+  populateFilters();
+  applyFilters();
+  renderAudit();
+  addAudit('LOGIN', 'system', user.username, {});
+  showToast('success', `Selamat datang, ${user.name}!`);
+}
+
 async function doLogin() { // Make it async
   if (loginAttempts >= 5) { showAlert('loginAlert','danger','Terlalu banyak percobaan. Coba lagi nanti.'); return; }
   const username = document.getElementById('loginUsername').value.trim();
@@ -2376,6 +2428,9 @@ document.addEventListener('click', e => {
     if (s) s.style.display = 'none';
   }
 });
+
+// Load saved credentials when page loads
+loadSavedCredentials();
 </script>
 </body>
 </html>
