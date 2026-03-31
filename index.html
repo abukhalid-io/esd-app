@@ -1057,7 +1057,8 @@ function updateClock() {
   const now = new Date();
   document.getElementById('currentDateTime').textContent = now.toLocaleString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   const h = now.getHours();
-  const shift = h >= 7 && h < 15 ? 'Shift Pagi' : h >= 15 && h < 23 ? 'Shift Sore' : 'Shift Malam';
+  // 2 Shifts: Shift Pagi (07:00-19:00) dan Shift Malam (19:00-07:00)
+  const shift = h >= 7 && h < 19 ? 'Shift Pagi' : 'Shift Malam';
   document.getElementById('shiftBadge').textContent = shift;
 }
 setInterval(updateClock, 1000); updateClock();
@@ -1805,7 +1806,7 @@ async function toggleVoiceInput() {
     recognition.start();
     isListening = true;
     updateMicButton();
-    showToast('info', '🎤 Mendengarkan... Ucapkan angka (contoh: "seratus lima puluh")');
+    showToast('info', '🎤 Mendengarkan... Ucapkan angka (contoh: "seratus lima puluh" atau "seratus koma lima")');
   } catch (e) {
     console.error('Error starting recognition:', e);
     isListening = false;
@@ -1825,8 +1826,12 @@ function convertSpokenNumber(text) {
   const directNum = parseFloat(text);
   if (!isNaN(directNum) && text.length > 0) return directNum;
   
-  // Handle "point" or "dot" for decimals
-  text = text.replace(/point/g, '.').replace(/koma/g, '.');
+  // Handle "point", "dot", "koma" for decimals - MORE variations
+  text = text.replace(/point/g, '.').replace(/koma/g, '.').replace(/dot/g, '.').replace(/[,]/g, '.');
+  
+  // Also handle "nol" after decimal (e.g., "seratus koma nol lima" = 100.05)
+  // Replace standalone numbers with their word equivalents
+  text = text.replace(/\s+/g, ' ');
   
   // Indonesian number words
   const ones = {
