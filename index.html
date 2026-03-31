@@ -225,47 +225,53 @@
     .sidebar .nav-link { padding:12px 16px; }
     .sidebar.mobile-open + .sidebar-overlay.show { display:block; }
     
-    /* Game Style Batch Input - Mobile Optimized */
-    .batch-game-header { padding: 12px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .batch-game-card { background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 80px; }
-    .batch-tag-display { padding: 12px 0; }
-    .batch-tag-number { font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 2px; }
-    .batch-tag-name { font-size: 28px; font-weight: 800; color: var(--primary); margin: 6px 0; }
-    .batch-tag-service { font-size: 12px; color: #495057; }
-    .batch-tag-io .badge { font-size: 10px; padding: 4px 8px; }
-    .batch-max-display { background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); padding: 8px; border-radius: 8px; margin: 10px 0; }
-    .batch-tag-max { font-size: 20px; font-weight: 700; color: #dc3545; }
-    .batch-input-area { margin: 12px 0; }
-    .batch-status-preview { min-height: 36px; }
+    /* Game Style Batch Input - Mobile Optimized - NO SCROLL */
+    .batch-game-header { padding: 8px; background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 8px; }
+    .batch-game-card { 
+      background: #fff; 
+      border-radius: 12px; 
+      padding: 12px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+      margin-bottom: 90px;
+      max-height: none;
+      overflow: visible;
+    }
+    .batch-tag-display { padding: 8px 0; }
+    .batch-tag-number { font-size: 10px; color: #6c757d; text-transform: uppercase; }
+    .batch-tag-name { font-size: 20px; font-weight: 700; color: var(--primary); margin: 4px 0; }
+    .batch-tag-service { font-size: 11px; color: #495057; display: none; }
+    .batch-tag-io .badge { font-size: 9px; padding: 2px 6px; }
+    .batch-max-display { background: #fff3cd; padding: 6px; border-radius: 6px; margin: 8px 0; }
+    .batch-tag-max { font-size: 16px; font-weight: 600; color: #dc3545; }
+    .batch-input-area { margin: 8px 0; }
+    .batch-status-preview { min-height: 28px; font-size: 12px; }
+    .batch-status-preview .badge { font-size: 11px; padding: 4px 8px; }
     .batch-actions { 
       position: fixed; 
       bottom: 0; 
       left: 0; 
       right: 0; 
       background: #fff; 
-      padding: 12px; 
+      padding: 8px; 
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1); 
       z-index: 100;
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
     .batch-actions .btn { 
-      padding: 12px; 
-      font-size: 14px; 
+      padding: 10px 8px; 
+      font-size: 12px; 
       font-weight: 600; 
-      border-radius: 8px; 
+      border-radius: 6px; 
       flex: 1;
     }
-    .batch-stats { padding: 10px; background: #f8f9fa; border-radius: 8px; }
-    .batch-stats small { display: block; font-size: 10px; margin-top: 4px; }
-    .batch-filters { background: #f8f9fa; }
-    #batchReadingValue { font-size: 20px !important; padding: 12px; }
+    .batch-stats { padding: 6px; background: #f8f9fa; border-radius: 6px; font-size: 11px; }
+    .batch-stats small { display: inline; font-size: 10px; margin-right: 8px; }
+    .batch-filters { background: #f8f9fa; padding: 6px; border-radius: 6px; margin-bottom: 8px; }
+    #batchReadingValue { font-size: 18px !important; padding: 8px; }
     
-    /* Prevent keyboard from hiding input */
-    .batch-game-card {
-      max-height: calc(100vh - 180px);
-      overflow-y: auto;
-    }
+    /* Compact layout - all visible */
+    .batch-game-card > * { margin-bottom: 6px; }
   }
 
   /* Game Style Batch Input */
