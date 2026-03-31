@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDM/ESD Monitoring System</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #1E3C72;
+    --secondary: #2A5298;
+    --success: #28A745;
+    --warning: #FFC107;
+    --danger: #DC3545;
+    --info: #17A2B8;
+    --light: #F8F9FA;
+    --dark: #343A40;
+    --sidebar-width: 250px;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: #f0f4f8; margin: 0; }
+
+  /* LOGIN */
+  #loginPage { display:flex; align-items:center; justify-content:center; min-height:100vh;
+    background: linear-gradient(135deg, #1E3C72 0%, #2A5298 50%, #17A2B8 100%); position:relative; overflow:hidden; }
+  #loginPage::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle at 30% 70%, rgba(30,60,114,0.3) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(23,162,184,0.2) 0%, transparent 50%); animation:gradientMove 15s ease-in-out infinite; }
+  @keyframes gradientMove { 0%, 100% { transform:translate(0, 0); } 50% { transform:translate(-5%, 5%); } }
+  .login-card { background:#fff; border-radius:20px; box-shadow:0 25px 80px rgba(0,0,0,0.35); padding:45px; width:100%; max-width:420px; position:relative; z-index:1; animation:fadeInUp 0.6s ease-out; }
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+  .login-logo { text-align:center; margin-bottom:30px; }
+  .login-logo .badge-system { background:linear-gradient(135deg,#1E3C72,#2A5298); color:#fff; padding:14px 24px; border-radius:12px; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:600; box-shadow:0 4px 15px rgba(30,60,114,0.3); }
+  .login-logo h2 { color:#1E3C72; font-weight:700; margin-top:14px; font-size:24px; }
+  .login-card .form-control:focus { border-color:#2A5298; box-shadow:0 0 0 3px rgba(42,82,152,0.15); }
+  .login-card .input-group-text { background:#f8f9fa; border-color:#dee2e6; color:#6c757d; }
+  .login-card .btn-primary { background:linear-gradient(135deg,#1E3C72,#2A5298); border:none; border-radius:10px; padding:12px 24px; font-weight:600; transition:.3s; }
+  .login-card .btn-primary:hover { background:linear-gradient(135deg,#2A5298,#1E3C72); transform:translateY(-2px); box-shadow:0 6px 20px rgba(30,60,114,0.35); }
+
+  /* LAYOUT */
+  #appPage { display:none; min-height:100vh; }
+  .sidebar { width:var(--sidebar-width); background:linear-gradient(180deg,#1E3C72 0%,#2A5298 100%); min-height:100vh; position:fixed; top:0; left:0; z-index:100; transition:.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y:auto; box-shadow:4px 0 20px rgba(0,0,0,0.1); }
+  .sidebar.collapsed { width:0; overflow:hidden; }
+  .sidebar-brand { padding:22px 20px; border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.1); }
+  .sidebar-brand h6 { color:#fff; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin:0; opacity:.7; font-weight:500; }
+  .sidebar-brand h5 { color:#fff; font-weight:700; margin:4px 0 0; font-size:15px; }
+  .sidebar-menu { padding:12px 0; }
+  .sidebar-menu .nav-link { color:rgba(255,255,255,0.75); padding:12px 20px; border-radius:0; display:flex; align-items:center; gap:12px; transition:.3s; font-size:13px; position:relative; }
+  .sidebar-menu .nav-link::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:0; background:#fff; border-radius:0 3px 3px 0; transition:.3s; }
+  .sidebar-menu .nav-link:hover { background:rgba(255,255,255,0.1); color:#fff; padding-left:24px; }
+  .sidebar-menu .nav-link.active { background:rgba(255,255,255,0.15); color:#fff; font-weight:500; }
+  .sidebar-menu .nav-link.active::before { height:24px; }
+  .sidebar-menu .nav-link i { font-size:18px; width:22px; transition:.3s; }
+  .sidebar-menu .nav-link:hover i { transform:scale(1.1); }
+  .sidebar-section { color:rgba(255,255,255,0.35); font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:18px 20px 8px; font-weight:600; }
+  .main-content { margin-left:var(--sidebar-width); padding:24px; transition:.3s cubic-bezier(0.4, 0, 0.2, 1); background:#f0f4f8; min-height:100vh; }
+  .main-content.expanded { margin-left:0; }
+  .topbar { background:#fff; padding:14px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; border:1px solid rgba(0,0,0,0.04); }
+  .topbar-title { font-weight:700; color:var(--primary); font-size:17px; }
+
+  /* CARDS */
+  .stat-card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:4px solid; transition:.3s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(135deg, rgba(30,60,114,0.03) 0%, transparent 100%); opacity:0; transition:.3s; }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,0.15); }
+  .stat-card:hover::before { opacity:1; }
+  .stat-card.total { border-left-color:var(--secondary); }
+  .stat-card.normal { border-left-color:var(--success); }
+  .stat-card.warning { border-left-color:var(--warning); }
+  .stat-card.critical { border-left-color:var(--danger); }
+  .stat-card.empty { border-left-color:#adb5bd; }
+  .stat-number { font-size:32px; font-weight:700; line-height:1.2; }
+  .stat-label { font-size:12px; color:#6c757d; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+  .stat-icon { font-size:24px; opacity:.2; position:absolute; right:16px; top:16px; transition:.3s; }
+  .stat-card:hover .stat-icon { opacity:.35; transform:scale(1.1); }
+
+  /* TABLE */
+  .table-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); overflow:hidden; border:1px solid rgba(0,0,0,0.04); }
+  .table-toolbar { padding:16px 20px; border-bottom:1px solid #f0f0f0; display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#fafbfc; }
+  .data-table { margin:0; }
+  .data-table thead th { background:linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%); color:#495057; font-size:11px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; padding:12px 14px; border:none; white-space:nowrap; border-bottom:2px solid #e9ecef; }
+  .data-table thead th:hover { background:#f0f2f5; cursor:pointer; }
+  .data-table tbody td { padding:10px 14px; border-color:#f5f5f5; vertical-align:middle; font-size:13px; transition:background-color .2s; }
+  .data-table tbody tr { transition:background-color .2s; }
+  .data-table tbody tr:hover { background:linear-gradient(135deg, #f8fbff 0%, #f5f9ff 100%); }
+  .data-table tbody tr:nth-child(even) { background-color:rgba(0,0,0,0.015); }
+  .data-table tbody tr:nth-child(even):hover { background:linear-gradient(135deg, #f8fbff 0%, #f5f9ff 100%); }
+
+  /* STATUS BADGES */
+  .badge-normal { background:linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color:#155724; border:1px solid rgba(21,87,36,0.1); }
+  .badge-warning { background:linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); color:#856404; border:1px solid rgba(133,100,4,0.1); }
+  .badge-critical { background:linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color:#721c24; border:1px solid rgba(114,28,36,0.1); }
+  .badge-empty { background:linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%); color:#6c757d; border:1px solid rgba(108,117,125,0.1); }
+  .status-badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; display:inline-block; transition:.2s; }
+  .status-badge:hover { transform:scale(1.05); }
+
+  /* PROGRESS */
+  .progress-mini { height:8px; border-radius:4px; overflow:hidden; background:#e9ecef; }
+  .progress-bar { transition:width .5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  /* MODAL */
+  .modal-header { background:linear-gradient(135deg,#1E3C72,#2A5298); color:#fff; border-radius:12px 12px 0 0; }
+  .modal-header .btn-close { filter:invert(1); opacity:.8; }
+  .modal-header .btn-close:hover { opacity:1; }
+  .modal-content { border:none; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.2); overflow:hidden; }
+  .tag-detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f5f5f5; transition:background-color .2s; }
+  .tag-detail-row:hover { background:#f8f9fa; padding-left:8px; padding-right:8px; margin:0 -8px; border-radius:4px; }
+  .tag-detail-row label { font-size:12px; color:#6c757d; }
+  .tag-detail-row span { font-weight:600; color:#1E3C72; }
+  .reading-input-section { background:linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%); border-radius:10px; padding:18px; margin-top:14px; border:1px solid #e9ecef; }
+
+  /* ALERTS */
+  .alert-fixed { position:fixed; top:20px; right:20px; z-index:9999; min-width:300px; animation:slideIn .3s ease; }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  /* PAGINATION */
+  .page-link { color:var(--primary); border-radius:6px !important; margin:0 2px; transition:.2s; }
+  .page-link:hover { background:#e9ecef; }
+  .page-item.active .page-link { background:linear-gradient(135deg, #1E3C72 0%, #2A5298 100%); border-color:var(--primary); }
+  .page-item.disabled .page-link { color:#adb5bd; }
+
+  /* FILTER BAR */
+  .filter-bar { background:#fff; border-radius:12px; padding:18px 22px; box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:20px; border:1px solid rgba(0,0,0,0.04); }
+  .filter-bar .form-control, .filter-bar .form-select { font-size:13px; border-radius:8px; border-color:#e9ecef; transition:.2s; }
+  .filter-bar .form-control:focus, .filter-bar .form-select:focus { border-color:var(--secondary); box-shadow:0 0 0 3px rgba(42,82,152,0.1); }
+  .search-highlight { background:#fff3cd; }
+  .btn-outline-secondary { border-radius:8px; transition:.2s; }
+  .btn-outline-secondary:hover { background:#6c757d; color:#fff; }
+  .btn-success { background:linear-gradient(135deg, #28a745 0%, #20c997 100%); border:none; border-radius:8px; transition:.3s; }
+  .btn-success:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(40,167,69,0.3); }
+
+  /* VIEW toggle */
+  .view-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+  /* PAGE sections */
+  .page-section { display:none; opacity:0; transition:opacity .3s ease; }
+  .page-section.active { display:block; opacity:1; }
+
+  /* BUTTONS */
+  .btn { border-radius:8px; font-weight:500; transition:.2s; }
+  .btn-primary { background:linear-gradient(135deg, #1E3C72 0%, #2A5298 100%); border:none; }
+  .btn-primary:hover { background:linear-gradient(135deg, #2A5298 0%, #1E3C72 100%); transform:translateY(-1px); box-shadow:0 4px 12px rgba(30,60,114,0.3); }
+  .btn-outline-primary { border-color:var(--primary); color:var(--primary); }
+  .btn-outline-primary:hover { background:var(--primary); border-color:var(--primary); }
+  .btn-sm { border-radius:6px; }
+
+  /* AUDIT */
+  .audit-row { font-size:12px; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+
+  /* BATCH INPUT */
+  .batch-tag-card { background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius:12px; border:1px solid #dee2e6; }
+  .batch-progress-container { padding:12px; background:#f8f9fa; border-radius:8px; }
+  .progress-bar-animated { animation:progress-stripes 1s linear infinite; }
+  @keyframes progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
+  .batch-nav-btn { min-height:45px; }
+  kbd { background:#e9ecef; border:1px solid #ced4da; border-radius:4px; padding:2px 6px; font-size:11px; color:#495057; }
+
+  /* BADGES */
+  .badge { font-weight:500; }
+  .bg-success { background:linear-gradient(135deg, #28a745 0%, #20c997 100%) !important; }
+  .bg-primary { background:linear-gradient(135deg, #1E3C72 0%, #2A5298 100%) !important; }
+  .bg-info { background:linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important; }
+  .bg-warning { background:linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important; color:#000 !important; }
+  .bg-danger { background:linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important; }
+
+  /* DROPDOWN */
+  .dropdown-menu { border:none; box-shadow:0 8px 25px rgba(0,0,0,0.12); border-radius:10px; padding:8px; }
+  .dropdown-item { border-radius:6px; padding:8px 12px; transition:.2s; }
+  .dropdown-item:hover { background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
+  .dropdown-item-text { font-size:12px; }
+
+  /* READING bar colors */
+  .bar-normal { background-color:var(--success); }
+  .bar-warning { background-color:var(--warning); }
+  .bar-critical { background-color:var(--danger); }
+
+  @media(max-width:768px) {
+    .sidebar { width:0; transform:translateX(-100%); }
+    .sidebar.mobile-open { width:var(--sidebar-width); transform:translateX(0); }
+    .main-content { margin-left:0; padding:16px; }
+    .stat-number { font-size:26px; }
+    .login-card { margin:16px; padding:30px; }
+    .topbar { padding:12px 16px; }
+    .table-toolbar { padding:12px 14px; }
+    .filter-bar { padding:14px 16px; }
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes slideInRight { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes pulse { 0%, 100% { opacity:1; } 50% { opacity:.7; } }
+
+  /* Card animations */
+  .stat-card { animation:fadeIn 0.4s ease-out; }
+  .stat-card:nth-child(1) { animation-delay:.1s; }
+  .stat-card:nth-child(2) { animation-delay:.2s; }
+  .stat-card:nth-child(3) { animation-delay:.3s; }
+  .stat-card:nth-child(4) { animation-delay:.4s; }
+
+  /* Toast animations */
+  .alert-fixed { animation:slideInRight 0.3s ease-out; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="badge-system"><i class="bi bi-cpu-fill"></i> Industrial DCS/ESD</div>
+      <h2>PDM/ESD Monitoring</h2>
+      <p class="text-muted" style="font-size:13px">Sistem Monitoring Tag Instrumentasi Plant</p>
+    </div>
+    <div id="loginAlert"></div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Username</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-person"></i></span>
+        <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" value="admin">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Password</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+        <input type="password" id="loginPassword" class="form-control" placeholder="Password" value="admin123">
+        <button class="btn btn-outline-secondary" onclick="togglePwd()"><i class="bi bi-eye" id="eyeIcon"></i></button>
+      </div>
+    </div>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+      <div class="form-check"><input type="checkbox" class="form-check-input" id="rememberMe"><label class="form-check-label" for="rememberMe">Ingat saya</label></div>
+    </div>
+    <button class="btn btn-primary w-100 py-2 fw-semibold" id="loginBtn" onclick="doLogin()">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Masuk ke Sistem
+    </button>
+  </div>
+</div>
+
+<!-- APP PAGE -->
+<div id="appPage">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h6><i class="bi bi-cpu me-1"></i>DCS/ESD Plant</h6>
+      <h5>PDM/ESD Monitor</h5>
+    </div>
+    <div class="sidebar-menu">
+      <div class="sidebar-section">Navigasi</div>
+      <a href="#" class="nav-link active" onclick="showPage('dashboard')"><i class="bi bi-speedometer2"></i>Dashboard</a>
+      <a href="#" class="nav-link" onclick="showPage('tags')"><i class="bi bi-tags"></i>Data TAG</a>
+      <div class="sidebar-section">Input Data</div>
+      <a href="#" class="nav-link" onclick="showPage('batchinput')"><i class="bi bi-play-circle"></i>Input Batch</a>
+      <a href="#" class="nav-link" onclick="showPage('input')"><i class="bi bi-pencil-square"></i>Edit Data</a>
+      <div class="sidebar-section">Tools</div>
+      <a href="#" class="nav-link" onclick="showPage('export')"><i class="bi bi-file-earmark-excel"></i>Export / Import</a>
+      <a href="#" class="nav-link" onclick="showPage('audit')"><i class="bi bi-journal-text"></i>Audit Log</a>
+      <div class="sidebar-section">Akun</div>
+      <a href="#" class="nav-link" onclick="doLogout()"><i class="bi bi-box-arrow-right"></i>Logout</a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="mainContent">
+    <div class="topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list fs-5"></i></button>
+        <div class="topbar-title" id="pageTitle">Dashboard</div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-success" id="shiftBadge">Shift Pagi</span>
+        <span id="currentDateTime" class="text-muted small"></span>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle me-1"></i><span id="userDisplay">Admin</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item-text small text-muted" id="userEmail"></span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="doLogout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page-section active" id="sec-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="stat-card total" onclick="filterByStatus('all')">
+            <div class="stat-number text-primary" id="statTotal">0</div>
+            <div class="stat-label">Total TAG</div>
+            <i class="bi bi-tags-fill text-primary stat-icon"></i>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card normal" onclick="filterByStatus('Normal')">
+            <div class="stat-number text-success" id="statNormal">0</div>
+            <div class="stat-label">Normal</div>
+            <i class="bi bi-check-circle-fill text-success stat-icon"></i>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card warning" onclick="filterByStatus('Warning')">
+            <div class="stat-number text-warning" id="statWarning">0</div>
+            <div class="stat-label">Warning</div>
+            <i class="bi bi-exclamation-triangle-fill text-warning stat-icon"></i>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card critical" onclick="filterByStatus('Critical')">
+            <div class="stat-number text-danger" id="statCritical">0</div>
+            <div class="stat-label">Critical</div>
+            <i class="bi bi-x-circle-fill text-danger stat-icon"></i>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card empty" onclick="filterByStatus('Empty')">
+            <div class="stat-number text-muted" id="statEmpty">0</div>
+            <div class="stat-label">Belum Input</div>
+            <i class="bi bi-dash-circle-fill text-muted stat-icon"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress overview -->
+      <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Status Overview</h6>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between mb-1"><span class="small">Normal</span><span class="small text-success fw-bold" id="pctNormal">0%</span></div>
+              <div class="progress progress-mini"><div class="progress-bar bar-normal" id="barNormal" style="width:0%"></div></div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between mb-1"><span class="small">Warning</span><span class="small text-warning fw-bold" id="pctWarning">0%</span></div>
+              <div class="progress progress-mini"><div class="progress-bar bar-warning" id="barWarning" style="width:0%"></div></div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between mb-1"><span class="small">Critical</span><span class="small text-danger fw-bold" id="pctCritical">0%</span></div>
+              <div class="progress progress-mini"><div class="progress-bar bar-critical" id="barCritical" style="width:0%"></div></div>
+            </div>
+            <div>
+              <div class="d-flex justify-content-between mb-1"><span class="small">Progress Input</span><span class="small fw-bold" id="pctInput">0%</span></div>
+              <div class="progress progress-mini"><div class="progress-bar bg-info" id="barInput" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2 text-primary"></i>Distribusi I/O</h6>
+            <div id="ioDistribution"></div>
+            <hr>
+            <h6 class="fw-bold mb-2 mt-2"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>TAG Perlu Perhatian</h6>
+            <div id="alertList" style="max-height:120px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity table -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>TAG Terbaru Diinput</h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table data-table">
+            <thead><tr><th>TAG DCS</th><th>SERVICE</th><th>Reading</th><th>MAX</th><th>UNIT</th><th>STATUS</th><th>Tgl Checked</th></tr></thead>
+            <tbody id="recentTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAG DATA PAGE -->
+    <div class="page-section" id="sec-tags">
+      <div class="filter-bar mb-3">
+        <div class="row g-2">
+          <div class="col-md-3">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="text" id="searchInput" class="form-control" placeholder="Cari TAG DCS / TAG No. / Service..." oninput="applyFilters()">
+            </div>
+          </div>
+          <div class="col-md-2">
+            <select id="filterLoc" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">Semua I/O</option>
+              <option value="ESD">ESD</option>
+              <option value="DCS">DCS</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select id="filterStatus" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">Semua Status</option>
+              <option value="Normal">Normal</option>
+              <option value="Warning">Warning</option>
+              <option value="Critical">Critical</option>
+              <option value="Empty">Belum Input</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select id="filterUnit" class="form-select form-select-sm" onchange="applyFilters()">
+              <option value="">Semua Unit</option>
+            </select>
+          </div>
+          <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()"><i class="bi bi-x-circle me-1"></i>Reset</button>
+            <button class="btn btn-sm btn-success" onclick="exportFiltered()"><i class="bi bi-file-excel me-1"></i>Export</button>
+            <span class="badge bg-secondary ms-auto align-self-center" id="filteredCount"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar d-flex justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted">Tampil:</span>
+            <select class="form-select form-select-sm w-auto" id="rowsPerPage" onchange="goPage(1)">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div class="small text-muted" id="tableInfo"></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table data-table align-middle">
+            <thead>
+              <tr>
+                <th style="width:40px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                <th onclick="sortBy('id')" style="cursor:pointer">No <i class="bi bi-arrow-down-up"></i></th>
+                <th onclick="sortBy('tag_no')" style="cursor:pointer">TAG No. <i class="bi bi-arrow-down-up"></i></th>
+                <th onclick="sortBy('tag_dcs')" style="cursor:pointer">TAG DCS <i class="bi bi-arrow-down-up"></i></th>
+                <th>SERVICE</th>
+                <th>I/O</th>
+                <th onclick="sortBy('max_limit')" style="cursor:pointer">MAX <i class="bi bi-arrow-down-up"></i></th>
+                <th>UNIT</th>
+                <th onclick="sortBy('reading_value')" style="cursor:pointer">Reading <i class="bi bi-arrow-down-up"></i></th>
+                <th>STATUS</th>
+                <th>Tx Cond</th>
+                <th>Date Checked</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tagTableBody"></tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center px-3 py-2">
+          <div class="small text-muted" id="paginationInfo"></div>
+          <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT READING PAGE (EDIT MODE) -->
+    <div class="page-section" id="sec-input">
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-search me-2 text-primary"></i>Cari TAG untuk Edit</h6>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">TAG DCS / TAG No.</label>
+              <input type="text" id="tagSearch" class="form-control" placeholder="Ketik TAG DCS atau TAG No..." oninput="searchTags()">
+              <div id="tagSuggestions" class="list-group mt-1" style="position:absolute;z-index:100;width:calc(100% - 72px);display:none"></div>
+            </div>
+            <div id="tagDetailCard" style="display:none">
+              <div class="reading-input-section">
+                <h6 class="fw-bold mb-3">Detail TAG</h6>
+                <div class="tag-detail-row"><label>TAG No.</label><span id="d_tag_no"></span></div>
+                <div class="tag-detail-row"><label>TAG DCS</label><span id="d_tag_dcs"></span></div>
+                <div class="tag-detail-row"><label>Service</label><span id="d_service"></span></div>
+                <div class="tag-detail-row"><label>I/O Location</label><span id="d_io_loc"></span></div>
+                <div class="tag-detail-row"><label>I/O Type</label><span id="d_io_type"></span></div>
+                <div class="tag-detail-row"><label>MAX Limit</label><span id="d_max" class="text-danger fw-bold"></span></div>
+                <div class="tag-detail-row"><label>Unit</label><span id="d_unit"></span></div>
+                <div class="tag-detail-row"><label>Notes</label><span id="d_notes" class="text-muted small"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Reading Value</h6>
+            <div id="inputFormArea" style="display:none">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Reading Value <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input type="number" id="readingValue" class="form-control" placeholder="Masukkan nilai reading..." min="0" oninput="calcStatus()">
+                  <span class="input-group-text" id="readingUnit">-</span>
+                </div>
+                <div class="mt-2" id="statusPreview"></div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Catatan</label>
+                <textarea id="inputNotes" class="form-control" rows="2" placeholder="Catatan tambahan (opsional)"></textarea>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary flex-fill" onclick="saveReading()"><i class="bi bi-save me-2"></i>Simpan Perubahan</button>
+                <button class="btn btn-outline-secondary" onclick="clearInputForm()"><i class="bi bi-x-circle"></i></button>
+              </div>
+            </div>
+            <div id="inputFormEmpty" class="text-center text-muted py-5">
+              <i class="bi bi-search fs-1 d-block mb-2" style="opacity:.3"></i>
+              Cari TAG untuk diedit datanya
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BATCH INPUT PAGE -->
+    <div class="page-section" id="sec-batchinput">
+      <!-- Batch Progress Header -->
+      <div class="table-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h5 class="mb-1"><i class="bi bi-play-circle me-2 text-primary"></i>Input Reading Batch</h5>
+            <small class="text-muted">Input data reading secara berurutan dari TAG pertama</small>
+          </div>
+          <div class="text-end">
+            <button class="btn btn-outline-primary btn-sm me-2" onclick="resetBatchInput()">
+              <i class="bi bi-arrow-clockwise me-1"></i>Mulai Ulang
+            </button>
+            <button class="btn btn-success btn-sm" onclick="startBatchInput()">
+              <i class="bi bi-play me-1"></i>Mulai Input
+            </button>
+          </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="batch-progress-container">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="small fw-semibold">Progress Input</span>
+            <span class="small"><span id="batchProgressText">0/0</span> TAG</span>
+          </div>
+          <div class="progress" style="height: 24px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="batchProgressBar" style="width: 0%">
+              <span id="batchProgressPercent" class="fw-bold">0%</span>
+            </div>
+          </div>
+          <div class="row mt-2 text-center">
+            <div class="col-3">
+              <small class="text-success"><i class="bi bi-check-circle me-1"></i><span id="batchCompleted">0</span> Selesai</small>
+            </div>
+            <div class="col-3">
+              <small class="text-warning"><i class="bi bi-clock me-1"></i><span id="batchSkipped">0</span> Dilewati</small>
+            </div>
+            <div class="col-3">
+              <small class="text-danger"><i class="bi bi-x-circle me-1"></i><span id="batchRemaining">0</span> Sisa</small>
+            </div>
+            <div class="col-3">
+              <small class="text-muted"><i class="bi bi-hourglass-split me-1"></i><span id="batchTotal">0</span> Total</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Input Card -->
+      <div class="row g-3" id="batchInputArea">
+        <div class="col-lg-5">
+          <div class="table-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-cpu me-2 text-primary"></i>TAG Saat Ini</h6>
+              <span class="badge bg-primary" id="batchCurrentIndex">0/0</span>
+            </div>
+            
+            <div id="batchCurrentTag" class="batch-tag-card p-3 mb-3" style="display:none;">
+              <div class="text-center mb-3">
+                <h3 class="text-primary fw-bold mb-1" id="batchTagDcs">-</h3>
+                <span class="badge bg-light text-dark" id="batchTagNo">-</span>
+              </div>
+              <div class="tag-detail-row"><label>Service</label><span id="batchTagService">-</span></div>
+              <div class="tag-detail-row"><label>I/O Location</label><span id="batchTagIoLoc">-</span></div>
+              <div class="tag-detail-row"><label>MAX Limit</label><span class="text-danger fw-bold" id="batchTagMax">-</span></div>
+              <div class="tag-detail-row"><label>Unit</label><span id="batchTagUnit">-</span></div>
+              <div class="tag-detail-row" id="batchCurrentReadingRow"><label>Reading Saat Ini</label><span id="batchCurrentReading">-</span></div>
+            </div>
+            
+            <div id="batchNoTag" class="text-center text-muted py-5">
+              <i class="bi bi-play-circle fs-1 d-block mb-3" style="opacity:.3"></i>
+              <p>Klik "Mulai Input" untuk memulai</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square me-2 text-primary"></i>Input Reading</h6>
+            
+              <div id="batchInputForm" style="display:none;">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Reading Value <span class="text-danger">*</span></label>
+                  <div class="input-group mb-2">
+                    <button type="button" class="btn btn-outline-secondary" onclick="speakCurrentTag()" title="Dengarkan TAG">
+                      <i class="bi bi-volume-up-fill"></i>
+                    </button>
+                    <input type="number" id="batchReadingValue" class="form-control form-control-lg" placeholder="Masukkan nilai reading..." min="0" step="any" oninput="calcBatchStatus()">
+                    <button type="button" class="btn btn-outline-danger" id="batchMicBtn" onclick="toggleVoiceInput()" title="Input dengan suara">
+                      <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <span class="input-group-text fs-5" id="batchReadingUnit">-</span>
+                  </div>
+                  <div id="batchStatusPreview" class="text-center mb-3"></div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold">Catatan</label>
+                  <textarea id="batchNotes" class="form-control" rows="2" placeholder="Catatan opsional"></textarea>
+                </div>
+              </div>
+            
+            <div id="batchFormEmpty" class="text-center text-muted py-3">
+              <i class="bi bi-arrow-right-circle fs-1 d-block mb-2" style="opacity:.3"></i>
+              <small>Pilih TAG terlebih dahulu</small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-collection me-2 text-primary"></i>Navigasi</h6>
+            
+            <div class="d-grid gap-2 mb-3" id="batchNavButtons" style="display:none;">
+              <button class="btn btn-success btn-lg" onclick="saveBatchReading('next')">
+                <i class="bi bi-check-lg me-2"></i>Simpan & Next
+              </button>
+              <button class="btn btn-outline-primary" onclick="saveBatchReading('skip')">
+                <i class="bi bi-skip-forward me-2"></i>Lewati (Skip)
+              </button>
+              <button class="btn btn-outline-secondary" onclick="batchPrevTag()">
+                <i class="bi bi-arrow-left me-2"></i>Sebelumnya
+              </button>
+            </div>
+            
+            <hr>
+            
+            <h6 class="fw-bold mb-2"><i class="bi bi-keyboard me-2 text-primary"></i>Shortcut</h6>
+            <div class="small text-muted">
+              <div class="mb-1"><kbd>Enter</kbd> → Simpan & Next</div>
+              <div class="mb-1"><kbd>Tab</kbd> → Field berikutnya</div>
+              <div class="mb-1"><kbd>Esc</kbd> → Skip TAG ini</div>
+              <div class="mb-1"><kbd>V</kbd> → Dengarkan TAG (TTS)</div>
+              <div><kbd>M</kbd> → Aktifkan Mic (Voice Input)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Jump -->
+      <div class="table-card p-4 mt-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-list-ol me-2 text-primary"></i>Quick Jump ke TAG</h6>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <select id="batchFilterIO" class="form-select form-select-sm" onchange="updateBatchList()">
+              <option value="">Semua I/O</option>
+              <option value="ESD">ESD</option>
+              <option value="DCS">DCS</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select id="batchFilterStatus" class="form-select form-select-sm" onchange="updateBatchList()">
+              <option value="">Semua Status</option>
+              <option value="empty">Belum Diinput</option>
+              <option value="filled">Sudah Diinput</option>
+              <option value="Normal">Normal</option>
+              <option value="Warning">Warning</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <input type="number" id="batchJumpTo" class="form-control form-control-sm" placeholder="Nomor TAG (1-286)" min="1">
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-primary btn-sm" onclick="jumpToBatchTag()">
+            <i class="bi bi-arrow-right me-1"></i>Jump
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="updateBatchList()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Completion Message -->
+      <div id="batchCompleteMessage" class="table-card p-5 mt-4 text-center" style="display:none;">
+        <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
+        <h4 class="text-success mb-2">Input Batch Selesai!</h4>
+        <p class="text-muted mb-4">Semua TAG telah diproses. Data telah disimpan ke localStorage.</p>
+        <div class="d-flex justify-content-center gap-3">
+          <button class="btn btn-outline-primary" onclick="resetBatchInput()">
+            <i class="bi bi-arrow-clockwise me-2"></i>Input Ulang
+          </button>
+          <button class="btn btn-primary" onclick="exportFiltered()">
+            <i class="bi bi-download me-2"></i>Export Data
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT/IMPORT PAGE -->
+    <div class="page-section" id="sec-export">
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-excel text-success me-2"></i>Export Data</h6>
+            <div class="list-group gap-2">
+              <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 border rounded p-3" onclick="exportAll()">
+                <i class="bi bi-table text-success fs-4"></i>
+                <div><div class="fw-semibold">Semua Data</div><div class="small text-muted">Export seluruh 286 TAG ke Excel</div></div>
+              </button>
+              <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 border rounded p-3" onclick="exportFiltered()">
+                <i class="bi bi-funnel text-primary fs-4"></i>
+                <div><div class="fw-semibold">Data Terfilter</div><div class="small text-muted">Export sesuai filter aktif</div></div>
+              </button>
+              <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 border rounded p-3" onclick="exportSummary()">
+                <i class="bi bi-bar-chart text-info fs-4"></i>
+                <div><div class="fw-semibold">Summary Report</div><div class="small text-muted">Statistik dan ringkasan status</div></div>
+              </button>
+              <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 border rounded p-3" onclick="exportIssues()">
+                <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                <div><div class="fw-semibold">Critical & Warning Only</div><div class="small text-muted">Hanya TAG bermasalah</div></div>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Import Data</h6>
+            <div class="border rounded p-4 text-center mb-3" style="border-style:dashed!important" id="dropZone">
+              <i class="bi bi-cloud-upload fs-1 text-muted d-block mb-2"></i>
+              <p class="text-muted mb-2">Drag & drop file Excel di sini</p>
+              <input type="file" id="importFile" accept=".xlsx,.xls,.csv" onchange="handleImport(this)" style="display:none">
+              <button class="btn btn-outline-primary btn-sm" onclick="document.getElementById('importFile').click()">
+                <i class="bi bi-folder me-1"></i>Pilih File
+              </button>
+            </div>
+            <button class="btn btn-outline-secondary w-100 mb-3" onclick="downloadTemplate()">
+              <i class="bi bi-download me-2"></i>Download Template Excel
+            </button>
+            <div id="importResult"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT LOG PAGE -->
+    <div class="page-section" id="sec-audit">
+      <div class="table-card">
+        <div class="table-toolbar"><h6 class="fw-bold mb-0"><i class="bi bi-journal-text me-2 text-primary"></i>Audit Log Aktivitas</h6></div>
+        <div class="table-responsive">
+          <table class="table data-table">
+            <thead><tr><th>Waktu</th><th>User</th><th>Aksi</th><th>TAG</th><th>Detail</th></tr></thead>
+            <tbody id="auditTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end appPage -->
+
+<!-- MODAL INPUT -->
+<div class="modal fade" id="inputModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Input Reading Value</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" onclick="saveModalReading()"><i class="bi bi-save me-2"></i>Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Peringatan Critical!</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirmBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" id="confirmOkBtn">Ya, Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ========== DATA ==========
+const USERS = [
+  {username:'admin', password:'admin123', role:'Admin', name:'Administrator'},
+  {username:'engineer', password:'engineer123', role:'Engineer', name:'Engineer'},
+  {username:'operator', password:'operator123', role:'Operator', name:'Operator'},
+];
+const RAW_TAGS = [{"id":"1","tag_no":"FT-1257","tag_dcs":"FI-1257","service":"102-B SCTN FLOW ESD","io_loc":"ESD","io_type":"AI","max_limit":212500.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":"AOF, Use for start up only"},{"id":"2","tag_no":"FIC-1020","tag_dcs":"FIC-1020","service":"123-C2 SCTN BW FLOW","io_loc":"DCS","io_type":"AI","max_limit":261000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"3","tag_no":"FT-1455A","tag_dcs":"FI-1455A","service":"123-C2 SCTN BW FLOW A","io_loc":"ESD","io_type":"AI","max_limit":261000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"4","tag_no":"FT-1455B","tag_dcs":"FI-1455B","service":"123-C2 SCTN BW FLOW B","io_loc":"ESD","io_type":"AI","max_limit":261000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"5","tag_no":"FT-1455C","tag_dcs":"FI-1455C","service":"123-C2 SCTN BW FLOW C","io_loc":"ESD","io_type":"AI","max_limit":261000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"6","tag_no":"LIC-1023A","tag_dcs":"LIC-1023A","service":"120-CF2 LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"7","tag_no":"LT-1216A","tag_dcs":"LI-1216A","service":"120-CF2 LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"8","tag_no":"LT-1216B","tag_dcs":"LI-1216B","service":"120-CF2 LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"9","tag_no":"LT-1216C","tag_dcs":"LI-1216C","service":"120-CF2 LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"10","tag_no":"LIC-1024A","tag_dcs":"LIC-1024A","service":"120-CF1 LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"11","tag_no":"LT-1217A","tag_dcs":"LI-1217A","service":"120-CF1 LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"12","tag_no":"LT-1217B","tag_dcs":"LI-1217B","service":"120-CF1 LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"13","tag_no":"LT-1217C","tag_dcs":"LI-1217C","service":"120-CF1 LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"14","tag_no":"LIC-1013","tag_dcs":"LIC-1013","service":"146-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"15","tag_no":"LT-1218A","tag_dcs":"LI-1218A","service":"146-D LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"16","tag_no":"LT-1218B","tag_dcs":"LI-1218B","service":"146-D LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"17","tag_no":"LT-1218C","tag_dcs":"LI-1218C","service":"146-D LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"18","tag_no":"TI-1047","tag_dcs":"TI-1047","service":"102-B DSCH TEMP","io_loc":"DCS","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"19","tag_no":"TT-1396","tag_dcs":"TI-1396","service":"102-B DSCH TEMP","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"20","tag_no":"LT-20100","tag_dcs":"LI-20100","service":"101 BJ L/O LVL LOW","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"21","tag_no":"PT-20100","tag_dcs":"PI-20100","service":"101 BJ L/O PRESS LOW","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"22","tag_no":"PT-20101B","tag_dcs":"PI-20101B","service":"101-BJ PRESSURE","io_loc":"DCS","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"23","tag_no":"PT-20101A","tag_dcs":"PI-20101A","service":"101-BJ PRESSURE","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"24","tag_no":"LIC-1042","tag_dcs":"LIC-1042","service":"122-D2 LEVEL LL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"25","tag_no":"LT-1043A","tag_dcs":"LI-1043A","service":"122-D2 LEVEL LL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"26","tag_no":"LT-1043B","tag_dcs":"LI-1043B","service":"122-D2 LEVEL LL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"27","tag_no":"LT-1043C","tag_dcs":"LI-1043C","service":"122-D2 LEVEL LL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"28","tag_no":"LIC-1040","tag_dcs":"LIC-1040","service":"153-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"29","tag_no":"LT-1044","tag_dcs":"LI-1044","service":"153-D LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"30","tag_no":"LIC-1041","tag_dcs":"LIC-1041","service":"122-D1 LEVEL LL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"31","tag_no":"LT-1045A","tag_dcs":"LI-1045A","service":"122-D1 LEVEL LL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"32","tag_no":"LT-1045B","tag_dcs":"LI-1045B","service":"122-D1 LEVEL LL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"33","tag_no":"LT-1045C","tag_dcs":"LI-1045C","service":"122-D1 LEVEL LL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"34","tag_no":"LIC-1046","tag_dcs":"LIC-1046","service":"163-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"35","tag_no":"LT-1048","tag_dcs":"LI-1048","service":"163-D LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"36","tag_no":"LIC-1021A","tag_dcs":"LIC-1021A","service":"120-CF4 LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"37","tag_no":"LT-1214A","tag_dcs":"LI-1214A","service":"120-CF4 LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"38","tag_no":"LT-1214B","tag_dcs":"LI-1214B","service":"120-CF4 LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"39","tag_no":"LT-1214C","tag_dcs":"LI-1214C","service":"120-CF4 LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"40","tag_no":"LIC-1022A","tag_dcs":"LIC-1022A","service":"120-CF3 LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"41","tag_no":"LT-1215A","tag_dcs":"LI-1215A","service":"120-CF3 LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"42","tag_no":"LT-1215B","tag_dcs":"LI-1215B","service":"120-CF3 LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"43","tag_no":"LT-1215C","tag_dcs":"LI-1215C","service":"120-CF3 LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"44","tag_no":"FIC-1002","tag_dcs":"FIC-1002","service":"130-D SCTN MS FLOW","io_loc":"DCS","io_type":"AI","max_limit":180000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"45","tag_no":"FT-1202A","tag_dcs":"FI-1202A","service":"130-D SCTN MS FLOW A","io_loc":"ESD","io_type":"AI","max_limit":180000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"46","tag_no":"FT-1202B","tag_dcs":"FI-1202B","service":"130-D SCTN MS FLOW B","io_loc":"ESD","io_type":"AI","max_limit":180000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"47","tag_no":"FT-1202C","tag_dcs":"FI-1202C","service":"130-D SCTN MS FLOW C","io_loc":"ESD","io_type":"AI","max_limit":180000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"48","tag_no":"LIC-1025","tag_dcs":"LIC-1025","service":"130-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"49","tag_no":"LT-1029A","tag_dcs":"LI-1029A","service":"130-D LEVEL LL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"50","tag_no":"LT-1029B","tag_dcs":"LI-1029B","service":"130-D LEVEL LL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"51","tag_no":"LT-1029C","tag_dcs":"LI-1029C","service":"130-D LEVEL LL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"52","tag_no":"PIC-1014","tag_dcs":"PIC-1014","service":"130-D SCTN MS PRES","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"53","tag_no":"PT-1053A","tag_dcs":"PI-1053A","service":"130-D SCTN MS PRES","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"54","tag_no":"PT-1053B","tag_dcs":"PI-1053B","service":"130-D SCTN MS PRES","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"55","tag_no":"PT-1053C","tag_dcs":"PI-1053C","service":"130-D SCTN MS PRES","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"56","tag_no":"TT-1024A","tag_dcs":"TI-1024A","service":"130-D SCTN TEMP","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"57","tag_no":"TT-1024B","tag_dcs":"TI-1024B","service":"130-D SCTN TEMP","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"58","tag_no":"TT-1024C","tag_dcs":"TI-1024C","service":"130-D SCTN TEMP","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"59","tag_no":"FIC-1072","tag_dcs":"FIC-1072","service":"103-C2 SCTN BW FLOW","io_loc":"DCS","io_type":"AI","max_limit":200000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"60","tag_no":"FT-1106","tag_dcs":"FI-1106","service":"103-C2 SCTN BW FLOW","io_loc":"ESD","io_type":"AI","max_limit":150000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"61","tag_no":"FIC-1005","tag_dcs":"FIC-1005","service":"121-D SCTN CM FLOW","io_loc":"DCS","io_type":"AI","max_limit":3500.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"62","tag_no":"FT-1205A","tag_dcs":"FI-1205A","service":"121-D SCTN CM FLOW LL A","io_loc":"ESD","io_type":"AI","max_limit":3200.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"63","tag_no":"FT-1205B","tag_dcs":"FI-1205B","service":"121-D SCTN CM FLOW LL B","io_loc":"ESD","io_type":"AI","max_limit":3200.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"64","tag_no":"FT-1205C","tag_dcs":"FI-1205C","service":"121-D SCTN CM FLOW LL C","io_loc":"ESD","io_type":"AI","max_limit":3200.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"65","tag_no":"FIC-1014","tag_dcs":"FIC-1014","service":"121-D SCTN CM FLOW","io_loc":"DCS","io_type":"AI","max_limit":660.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"66","tag_no":"FT-1214A","tag_dcs":"FI-1214A","service":"121-D SCTN CM FLOW LL A","io_loc":"ESD","io_type":"AI","max_limit":660.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"67","tag_no":"FT-1214B","tag_dcs":"FI-1214B","service":"121-D SCTN CM FLOW LL B","io_loc":"ESD","io_type":"AI","max_limit":660.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"68","tag_no":"FT-1214C","tag_dcs":"FI-1214C","service":"121-D SCTN CM FLOW LL C","io_loc":"ESD","io_type":"AI","max_limit":660.0,"unit":"t/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"69","tag_no":"LIC-1005","tag_dcs":"LIC-1005","service":"142-D2 LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"70","tag_no":"LT-1132A","tag_dcs":"LI-1132A","service":"142-D2 LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"71","tag_no":"LT-1132B","tag_dcs":"LI-1132B","service":"142-D2 LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"72","tag_no":"LT-1132C","tag_dcs":"LI-1132C","service":"142-D2 LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"73","tag_no":"LIC-1004","tag_dcs":"LIC-1004","service":"121-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"74","tag_no":"LT-1204A","tag_dcs":"LI-1204A","service":"121-D LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"75","tag_no":"LT-1204B","tag_dcs":"LI-1204B","service":"121-D LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"76","tag_no":"LT-1204C","tag_dcs":"LI-1204C","service":"121-D LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"77","tag_no":"PT-7500","tag_dcs":"PI-7500","service":"117-J/JA DSCH PRES","io_loc":"ESD","io_type":"AI","max_limit":15.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"78","tag_no":"LIC-1003","tag_dcs":"LIC-1003","service":"142-D1 LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"79","tag_no":"LT-1205","tag_dcs":"LI-1205","service":"142-D1 LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"80","tag_no":"FIC-1003","tag_dcs":"FIC-1003","service":"101-BCPA SCTN FLOW","io_loc":"DCS","io_type":"AI","max_limit":152000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"81","tag_no":"FT-1203A","tag_dcs":"FI-1203A","service":"101-BCPA SCTN FLOW A","io_loc":"ESD","io_type":"AI","max_limit":152000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"82","tag_no":"FT-1203B","tag_dcs":"FI-1203B","service":"101-BCPA SCTN FLOW B","io_loc":"ESD","io_type":"AI","max_limit":152000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"83","tag_no":"FT-1203C","tag_dcs":"FI-1203C","service":"101-BCPA SCTN FLOW C","io_loc":"ESD","io_type":"AI","max_limit":152000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"84","tag_no":"PI-1075","tag_dcs":"PI-1075","service":"101-J DSCH PRESS","io_loc":"DCS","io_type":"AI","max_limit":80.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"85","tag_no":"PT-1023A","tag_dcs":"PI-1023A","service":"101-J DSCH PRESS","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"86","tag_no":"PT-1023B","tag_dcs":"PI-1023B","service":"101-J DSCH PRESS","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"87","tag_no":"PT-1023C","tag_dcs":"PI-1023C","service":"101-J DSCH PRESS","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"88","tag_no":"PI-3284","tag_dcs":"PI-3284","service":"103-JT DSCH VE PRES","io_loc":"DCS","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"89","tag_no":"PT-2011A","tag_dcs":"PI-2011A","service":"103-JT DSCH VE PRES A","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"90","tag_no":"PT-2011B","tag_dcs":"PI-2011B","service":"103-JT DSCH VE PRES B","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"91","tag_no":"PT-2011C","tag_dcs":"PI-2011C","service":"103-JT DSCH VE PRES C","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"92","tag_no":"PI-3018A","tag_dcs":"PI-3018A","service":"101-JT DSCH PRES","io_loc":"DCS","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"93","tag_no":"PT-3016A","tag_dcs":"PI-3016A","service":"101-JT DSCH PRES A","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"94","tag_no":"PT-3016B","tag_dcs":"PI-3016B","service":"101-JT DSCH PRES B","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"95","tag_no":"PT-3016C","tag_dcs":"PI-3016C","service":"101-JT DSCH PRES C","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kgA","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"96","tag_no":"TI-1276","tag_dcs":"TI-1276","service":"101-J DSCH TEMP","io_loc":"DCS","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"97","tag_no":"TT-1213A","tag_dcs":"TI-1213A","service":"101-J DSCH TEMP","io_loc":"ESD","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"98","tag_no":"TT-1213B","tag_dcs":"TI-1213B","service":"101-J DSCH TEMP","io_loc":"ESD","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"99","tag_no":"TT-1213C","tag_dcs":"TI-1213C","service":"101-J DSCH TEMP","io_loc":"ESD","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"100","tag_no":"TI-1125","tag_dcs":"TI-1125","service":"105-JT SCTN TEMP","io_loc":"DCS","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"101","tag_no":"TT-1026A","tag_dcs":"TI-1026A","service":"105-JT SCTN TEMP A","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"102","tag_no":"TT-1026B","tag_dcs":"TI-1026B","service":"105-JT SCTN TEMP B","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"103","tag_no":"TT-1026C","tag_dcs":"TI-1026C","service":"105-JT SCTN TEMP C","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"104","tag_no":"LT-2227A","tag_dcs":"LI-2227A","service":"174-D1 LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"105","tag_no":"LT-2227B","tag_dcs":"LI-2227B","service":"174-D1 LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"106","tag_no":"LT-2227C","tag_dcs":"LI-2227C","service":"174-D1 LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":"AOF"},{"id":"107","tag_no":"LT-1227A","tag_dcs":"LI-1227A","service":"174-D LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"108","tag_no":"LT-1227B","tag_dcs":"LI-1227B","service":"174-D LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"109","tag_no":"LT-1227C","tag_dcs":"LI-1227C","service":"174-D LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"110","tag_no":"LT-1030A","tag_dcs":"LI-1030A","service":"101-U LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"111","tag_no":"LT-1031","tag_dcs":"LI-1031","service":"101-U LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"112","tag_no":"LT-1123A","tag_dcs":"LI-1123A","service":"101-U LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"113","tag_no":"LT-1123B","tag_dcs":"LI-1123B","service":"101-U LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"114","tag_no":"LT-1123C","tag_dcs":"LI-1123C","service":"101-U LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"115","tag_no":"TI-1200","tag_dcs":"TI-1200","service":"106-D TEMP","io_loc":"DCS","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"116","tag_no":"TT-1200A","tag_dcs":"TI-1200A","service":"106-D TEMP HH A","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"117","tag_no":"TT-1200B","tag_dcs":"TI-1200B","service":"106-D TEMP HH B","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"118","tag_no":"TT-1200C","tag_dcs":"TI-1200C","service":"106-D TEMP HH C","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"119","tag_no":"TI-1201","tag_dcs":"TI-1201","service":"106-D TEMP","io_loc":"DCS","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"120","tag_no":"TT-1201A","tag_dcs":"TI-1201A","service":"106-D TEMP HH A","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"121","tag_no":"TT-1201B","tag_dcs":"TI-1201B","service":"106-D TEMP HH B","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"122","tag_no":"TT-1201C","tag_dcs":"TI-1201C","service":"106-D TEMP HH C","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"123","tag_no":"TI-1202","tag_dcs":"TI-1202","service":"106-D TEMP","io_loc":"DCS","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"124","tag_no":"TT-1202A","tag_dcs":"TI-1202A","service":"106-D TEMP HH A","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"125","tag_no":"TT-1202B","tag_dcs":"TI-1202B","service":"106-D TEMP HH B","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"126","tag_no":"TT-1202C","tag_dcs":"TI-1202C","service":"106-D TEMP HH C","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"127","tag_no":"TI-1203","tag_dcs":"TI-1203","service":"106-D TEMP","io_loc":"DCS","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"128","tag_no":"TT-1203A","tag_dcs":"TI-1203A","service":"106-D TEMP HH A","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"129","tag_no":"TT-1203B","tag_dcs":"TI-1203B","service":"106-D TEMP HH B","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"130","tag_no":"TT-1203C","tag_dcs":"TI-1203C","service":"106-D TEMP HH C","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"131","tag_no":"TI-3011","tag_dcs":"TI-3011","service":"101-BKFD DSCH TEMP","io_loc":"DCS","io_type":"AI","max_limit":700.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"132","tag_no":"TT-3011A","tag_dcs":"TI-3011A","service":"101-BKFD DSCH TEMP A","io_loc":"ESD","io_type":"AI","max_limit":700.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"133","tag_no":"TT-3011B","tag_dcs":"TI-3011B","service":"101-BKFD DSCH TEMP B","io_loc":"ESD","io_type":"AI","max_limit":700.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"134","tag_no":"TT-3011C","tag_dcs":"TI-3011C","service":"101-BKFD DSCH TEMP C","io_loc":"ESD","io_type":"AI","max_limit":700.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"135","tag_no":"PT-1150","tag_dcs":"PI-1150","service":"102-B","io_loc":"ESD","io_type":"AI","max_limit":8.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"AOF,start up only"},{"id":"136","tag_no":"LI-1001A","tag_dcs":"LI-1001A","service":"141-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"137","tag_no":"LI-1001B","tag_dcs":"LI-1001B","service":"141-D LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"138","tag_no":"LT-1223A","tag_dcs":"LI-1223A","service":"141-D LEVEL A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"139","tag_no":"LT-1223B","tag_dcs":"LI-1223B","service":"141-D LEVEL B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"140","tag_no":"LT-1223C","tag_dcs":"LI-1223C","service":"141-D LEVEL C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"141","tag_no":"PT-1036","tag_dcs":"PI-1036","service":"141-D","io_loc":"DCS","io_type":"AI","max_limit":250.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"142","tag_no":"PT-1236","tag_dcs":"PI-1236","service":"141-D","io_loc":"ESD","io_type":"AI","max_limit":250.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"compensated,high"},{"id":"143","tag_no":"PT-1058","tag_dcs":"PI-1058","service":"101-B PRES A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"mmH2O-g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"144","tag_no":"PIC-1855","tag_dcs":"PIC-1855","service":"101-BC HOT AIR PRES","io_loc":"DCS","io_type":"AI","max_limit":250.0,"unit":"mmH2O","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"145","tag_no":"PT-1231A","tag_dcs":"PI-1231A","service":"101-BC HOT AIR PRES A","io_loc":"ESD","io_type":"AI","max_limit":250.0,"unit":"mmH2O","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"146","tag_no":"PT-1231B","tag_dcs":"PI-1231B","service":"101-BC HOT AIR PRES B","io_loc":"ESD","io_type":"AI","max_limit":250.0,"unit":"mmH2O","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"147","tag_no":"PT-1231C","tag_dcs":"PI-1231C","service":"101-BC HOT AIR PRES C","io_loc":"ESD","io_type":"AI","max_limit":250.0,"unit":"mmH2O","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"148","tag_no":"PT-1059A","tag_dcs":"PI-1059A","service":"101-B PRES A","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"mmH2O-g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"149","tag_no":"PT-1059B","tag_dcs":"PI-1059B","service":"101-B PRES B","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"mmH2O-g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"150","tag_no":"PT-1059C","tag_dcs":"PI-1059C","service":"101-B PRES C","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"mmH2O-g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"151","tag_no":"PT-1155","tag_dcs":"PI-1155","service":"102-B PILOT FG PRESS","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"for start up only"},{"id":"152","tag_no":"PT-1241A","tag_dcs":"PI-1241A","service":"FG SPRHEAT PRES A","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"153","tag_no":"PT-1241B","tag_dcs":"PI-1241B","service":"FG SPRHEAT PRES B","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"154","tag_no":"PT-1241C","tag_dcs":"PI-1241C","service":"FG SPRHEAT PRES C","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"155","tag_no":"PT-1246A","tag_dcs":"PI-1246A","service":"FG SPRHEAT PRES A","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"156","tag_no":"PT-1246B","tag_dcs":"PI-1246B","service":"FG SPRHEAT PRES B","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"157","tag_no":"PT-1246C","tag_dcs":"PI-1246C","service":"FG SPRHEAT PRES C","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"158","tag_no":"PT-4241A","tag_dcs":"PI-4241A","service":"FG TUNNEL BURN PRES A","io_loc":"ESD","io_type":"AI","max_limit":2.25,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"for start up only"},{"id":"159","tag_no":"PT-4241B","tag_dcs":"PI-4241B","service":"FG TUNNEL BURN PRES B","io_loc":"ESD","io_type":"AI","max_limit":2.25,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"for start up only"},{"id":"160","tag_no":"PT-4241C","tag_dcs":"PI-4241C","service":"FG TUNNEL BURN PRES CV","io_loc":"ESD","io_type":"AI","max_limit":2.25,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"for start up only"},{"id":"161","tag_no":"TIC-1005","tag_dcs":"TIC-1005","service":"101-B DSCH TEMP","io_loc":"DCS","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"162","tag_no":"TT-1007","tag_dcs":"TI-1007","service":"101-B DSCH TEMP HH","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"163","tag_no":"TI-1552","tag_dcs":"TI-1552","service":"101-B TEMP","io_loc":"DCS","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"164","tag_no":"TT-1009","tag_dcs":"TI-1009","service":"101-B TEMP","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"165","tag_no":"PIC-1002","tag_dcs":"PIC-1002","service":"FG ARCH BURNE FG PRES","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"166","tag_no":"PT-1221A","tag_dcs":"PI-1221A","service":"FG ARCH BURNE FG PRES A","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"167","tag_no":"PT-1221B","tag_dcs":"PI-1221B","service":"FG ARCH BURNE FG PRES B","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"168","tag_no":"PT-1221C","tag_dcs":"PI-1221C","service":"FG ARCH BURNE FG PRES C","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"169","tag_no":"FIC-1001","tag_dcs":"FIC-1001","service":"TO 104-C FLOW","io_loc":"DCS","io_type":"AI","max_limit":57500.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"170","tag_no":"FT-1201A","tag_dcs":"FI-1201A","service":"TO 104-C FLOW A","io_loc":"ESD","io_type":"AI","max_limit":57500.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"171","tag_no":"FT-1201B","tag_dcs":"FI-1201B","service":"TO 104-C FLOW B","io_loc":"ESD","io_type":"AI","max_limit":57500.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"172","tag_no":"FT-1201C","tag_dcs":"FI-1201C","service":"TO 104-C FLOW C","io_loc":"ESD","io_type":"AI","max_limit":57500.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"173","tag_no":"PIC-1042","tag_dcs":"PIC-1042","service":"TO 104-C PRES","io_loc":"DCS","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"174","tag_no":"PT-1200A","tag_dcs":"PI-1200A","service":"TO 104-C PRES","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"175","tag_no":"PT-1200B","tag_dcs":"PI-1200B","service":"TO 104-C PRES","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"176","tag_no":"PT-1200C","tag_dcs":"PI-1200C","service":"TO 104-C PRES","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"177","tag_no":"TI-1307","tag_dcs":"TI-1307","service":"TO 104-C TEMP","io_loc":"DCS","io_type":"AI","max_limit":400.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"178","tag_no":"TT-1204A","tag_dcs":"TI-1204A","service":"TO 104-C TEMP","io_loc":"ESD","io_type":"AI","max_limit":400.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"179","tag_no":"TT-1204B","tag_dcs":"TI-1204B","service":"TO 104-C TEMP","io_loc":"ESD","io_type":"AI","max_limit":400.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"180","tag_no":"TT-1204C","tag_dcs":"TI-1204C","service":"TO 104-C TEMP","io_loc":"ESD","io_type":"AI","max_limit":400.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"181","tag_no":"TI-3005","tag_dcs":"TI-3005","service":"103-D DSCH TEMP","io_loc":"DCS","io_type":"AI","max_limit":1200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"182","tag_no":"TT-3005A","tag_dcs":"TI-3005A","service":"103-D DSCH TEMP A","io_loc":"ESD","io_type":"AI","max_limit":1200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"183","tag_no":"TT-3005B","tag_dcs":"TI-3005B","service":"103-D DSCH TEMP B","io_loc":"ESD","io_type":"AI","max_limit":1200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"184","tag_no":"TT-3005C","tag_dcs":"TI-3005C","service":"103-D DSCH TEMP C","io_loc":"ESD","io_type":"AI","max_limit":1200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"185","tag_no":"LT-3004","tag_dcs":"LI-3004","service":"188-D LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"186","tag_no":"FT-3000B","tag_dcs":"FI-3000B","service":"BW TO SP-DH-214 FLOW B","io_loc":"ESD","io_type":"AI","max_limit":3500.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":"AOF"},{"id":"187","tag_no":"FT-3001A","tag_dcs":"FI-3001A","service":"MS TO SP-DH-214 FLOW A","io_loc":"ESD","io_type":"AI","max_limit":30000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"188","tag_no":"FT-3001B","tag_dcs":"FI-3001B","service":"MS TO SP-DH-214 FLOW B","io_loc":"ESD","io_type":"AI","max_limit":30000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"189","tag_no":"FT-3001C","tag_dcs":"FI-3001C","service":"MS TO SP-DH-214 FLOW C","io_loc":"ESD","io_type":"AI","max_limit":30000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"190","tag_no":"FT-3001","tag_dcs":"FI-3001","service":"MS TO SP-DH-214 FLOW","io_loc":"DCS","io_type":"AI","max_limit":30000.0,"unit":"kg/hr","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"191","tag_no":"FT-3002A","tag_dcs":"FI-3002A","service":"NG TO 101-BKFD FLOW A","io_loc":"ESD","io_type":"AI","max_limit":11000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"192","tag_no":"FT-3002B","tag_dcs":"FI-3002B","service":"NG TO 101-BKFD FLOW B","io_loc":"ESD","io_type":"AI","max_limit":11000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"193","tag_no":"FT-3002C","tag_dcs":"FI-3002C","service":"NG TO 101-BKFD FLOW C","io_loc":"ESD","io_type":"AI","max_limit":11000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"194","tag_no":"FT-3002","tag_dcs":"FI-3002","service":"NG TO 101-BKFD FLOW","io_loc":"DCS","io_type":"AI","max_limit":11000.0,"unit":"Nm3/h","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"195","tag_no":"LT-3003","tag_dcs":"LI-3003","service":"TO CNDNSATE TRAP LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"196","tag_no":"LT-3001","tag_dcs":"LI-3001","service":"TO CNDNSATE TRAP LEVEL","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"197","tag_no":"PT-3001","tag_dcs":"PI-3001","service":"MS TO SP-DH-214 PRESS","io_loc":"ESD","io_type":"AI","max_limit":90.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"198","tag_no":"TT-3002","tag_dcs":"TI-3002","service":"MS TO SP-DH-214 TEMP","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"199","tag_no":"TT-3001","tag_dcs":"TI-3001","service":"MS TO SP-DH-214 TEMP","io_loc":"DCS","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"200","tag_no":"TT-3007A","tag_dcs":"TI-3007A","service":"100-C DSCH TEMP A","io_loc":"ESD","io_type":"AI","max_limit":1000.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"201","tag_no":"TT-3007B","tag_dcs":"TI-3007B","service":"100-C DSCH TEMP B","io_loc":"ESD","io_type":"AI","max_limit":1000.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"202","tag_no":"TT-3007C","tag_dcs":"TI-3007C","service":"100-C DSCH TEMP C","io_loc":"ESD","io_type":"AI","max_limit":1000.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"203","tag_no":"TT-3007","tag_dcs":"TI-3007","service":"100-C DSCH TEMP","io_loc":"DCS","io_type":"AI","max_limit":1200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"204","tag_no":"LT-20200","tag_dcs":"LI-20200","service":"101 BJ1 L/O LVL LOW","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"205","tag_no":"PT-20200","tag_dcs":"PI-20200","service":"101 BJ1 L/O PRESS LOW","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"206","tag_no":"PT-1226A","tag_dcs":"PI-1226A","service":"FG ARCH BURNE SG PRES","io_loc":"ESD","io_type":"AI","max_limit":1.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"207","tag_no":"PT-1226B","tag_dcs":"PI-1226B","service":"FG ARCH BURNE SG PRES","io_loc":"ESD","io_type":"AI","max_limit":1.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"208","tag_no":"PT-1226C","tag_dcs":"PI-1226C","service":"FG ARCH BURNE SG PRES","io_loc":"ESD","io_type":"AI","max_limit":1.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"209","tag_no":"PT-20201A","tag_dcs":"PI-20201A","service":"101 BJ1 L/O PRESS LOW","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"210","tag_no":"TT-1025A","tag_dcs":"TI-1025A","service":"103-JT SCTN TEMP A","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"211","tag_no":"TT-1025B","tag_dcs":"TI-1025B","service":"103-JT SCTN TEMP B","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"212","tag_no":"TT-1025C","tag_dcs":"TI-1025C","service":"103-JT SCTN TEMP C","io_loc":"ESD","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"213","tag_no":"TT-1754","tag_dcs":"TI-1754","service":"103-JT SCTN TEMP","io_loc":"DCS","io_type":"AI","max_limit":600.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"214","tag_no":"TT-1027A","tag_dcs":"TI-1027A","service":"101-JT SCTN TEMP A","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"215","tag_no":"TT-1027B","tag_dcs":"TI-1027B","service":"101-JT SCTN TEMP B","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"216","tag_no":"TT-1027C","tag_dcs":"TI-1027C","service":"101-JT SCTN TEMP C","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"217","tag_no":"TT-1752","tag_dcs":"TI-1752","service":"101-JT SCTN TEMP","io_loc":"ESD","io_type":"AI","max_limit":500.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"218","tag_no":"PT-1221A","tag_dcs":"PI-1221A","service":"FG ARCH BURNER FG PRESS A","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"219","tag_no":"PT-1221B","tag_dcs":"PI-1221B","service":"FG ARCH BURNER FG PRESS B","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"220","tag_no":"PT-1221C","tag_dcs":"PI-1221C","service":"FG ARCH BURNER FG PRESS C","io_loc":"ESD","io_type":"AI","max_limit":2.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"221","tag_no":"ST-1007A","tag_dcs":"ST-1007A","service":"101-BJM SPEED A","io_loc":"ESD","io_type":"AI","max_limit":1500.0,"unit":"rpm","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"222","tag_no":"ST-1007B","tag_dcs":"ST-1007B","service":"101-BJM SPEED B","io_loc":"ESD","io_type":"AI","max_limit":1500.0,"unit":"rpm","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"223","tag_no":"ST-1007C","tag_dcs":"ST-1007C","service":"101-BJM SPEED C","io_loc":"ESD","io_type":"AI","max_limit":1500.0,"unit":"rpm","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"224","tag_no":"ST-2007A","tag_dcs":"ST-2007A","service":"101-BJ1M SPEED A","io_loc":"ESD","io_type":"AI","max_limit":1500.0,"unit":"rpm","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"225","tag_no":"ST-2007B","tag_dcs":"ST-2007B","service":"101-BJ1M SPEED B","io_loc":"ESD","io_type":"AI","max_limit":1500.0,"unit":"rpm","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"226","tag_no":"ST-2007C","tag_dcs":"ST-2007C","service":"101-BJ1M SPEED C","io_loc":"ESD","io_type":"AI","max_limit":1500.0,"unit":"rpm","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"227","tag_no":"LT-10701","tag_dcs":"LI-10701","service":"107-J LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"228","tag_no":"PT-10401A","tag_dcs":"PI-10401A","service":"104-J L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"229","tag_no":"PT-10401B","tag_dcs":"PI-10401B","service":"104-J L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"230","tag_no":"PT-10401C","tag_dcs":"PI-10401C","service":"104-J L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"231","tag_no":"LT-10401","tag_dcs":"LI-10401","service":"104-J LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"232","tag_no":"PT-10411A","tag_dcs":"PI-10411A","service":"104-JA L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"233","tag_no":"PT-10411B","tag_dcs":"PI-10411B","service":"104-JA L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"234","tag_no":"PT-10411C","tag_dcs":"PI-10411C","service":"104-JA L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"235","tag_no":"LT-10411","tag_dcs":"LI-10411","service":"104-JA LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"236","tag_no":"PT-10701A","tag_dcs":"PI-10701A","service":"107-JA L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"237","tag_no":"PT-10701B","tag_dcs":"PI-10701B","service":"107-JA L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"238","tag_no":"PT-10701C","tag_dcs":"PI-10701C","service":"107-JA L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"239","tag_no":"PT-20201B","tag_dcs":"PI-20201B","service":"101 BJ1 L/O PRESS LOW","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"240","tag_no":"PT-10711A","tag_dcs":"PI-10711A","service":"107-JB L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"241","tag_no":"PT-10711B","tag_dcs":"PI-10711B","service":"107-JB L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"242","tag_no":"PT-10711C","tag_dcs":"PI-10711C","service":"107-JB L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"243","tag_no":"LT-10711","tag_dcs":"LI-10711","service":"107-JB LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"244","tag_no":"PT-10721A","tag_dcs":"PI-10721A","service":"107-JC L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"245","tag_no":"PT-10721B","tag_dcs":"PI-10721B","service":"107-JC L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"246","tag_no":"PT-10721C","tag_dcs":"PI-10721C","service":"107-JC L/O SUPPLY PRESS","io_loc":"ESD","io_type":"AI","max_limit":10.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"247","tag_no":"LT-10721","tag_dcs":"LI-10721","service":"107-JC LEVEL","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"248","tag_no":"LT-17501A","tag_dcs":"LI-17501A","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"249","tag_no":"LT-17501B","tag_dcs":"LI-17501B","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":"AOF, 175-J standbay"},{"id":"250","tag_no":"LT-17501C","tag_dcs":"LI-17501C","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":"AOF, 175-J standbay"},{"id":"251","tag_no":"LT-17502","tag_dcs":"LI-17502","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"252","tag_no":"PT-17503A","tag_dcs":"PI-17503A","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":60.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"253","tag_no":"PT-17503B","tag_dcs":"PI-17503B","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":60.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"254","tag_no":"PT-17503C","tag_dcs":"PI-17503C","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":60.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"255","tag_no":"PT-17502","tag_dcs":"PI-17502","service":"175-J","io_loc":"DCS","io_type":"AI","max_limit":60.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"256","tag_no":"PT-17504A","tag_dcs":"PI-17504A","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":12.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"257","tag_no":"PT-17504B","tag_dcs":"PI-17504B","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":12.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"258","tag_no":"PT-17504C","tag_dcs":"PI-17504C","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":12.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"259","tag_no":"PT-17505","tag_dcs":"PI-17505","service":"175-J","io_loc":"DCS","io_type":"AI","max_limit":12.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"260","tag_no":"TT-17501A","tag_dcs":"TI-17501A","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"261","tag_no":"TT-17501B","tag_dcs":"TI-17501B","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"262","tag_no":"TT-17501C","tag_dcs":"TI-17501C","service":"175-J","io_loc":"ESD","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"263","tag_no":"TT-17502","tag_dcs":"TI-17502","service":"175-J","io_loc":"DCS","io_type":"AI","max_limit":200.0,"unit":"degC","reading_value":null,"tx_condition":"","date_checked":"","notes":"175-J standbay"},{"id":"264","tag_no":"PT-20101B","tag_dcs":"PI-20101B","service":"101-BJ PRESSURE","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"265","tag_no":"PT-20101A","tag_dcs":"PI-20101A","service":"101-BJ PRESSURE","io_loc":"ESD","io_type":"AI","max_limit":6.0,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"266","tag_no":"LT-3105","tag_dcs":"LI-3105","service":"AMMONIA STORAGE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"267","tag_no":"LT-3106","tag_dcs":"LI-3106","service":"AMMONIA STORAGE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"268","tag_no":"PT-3101","tag_dcs":"PI-3101","service":"AMMONIA STORAGE","io_loc":"ESD","io_type":"AI","max_limit":0.15,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"269","tag_no":"PT-3103","tag_dcs":"PI-3103","service":"AMMONIA STORAGE","io_loc":"ESD","io_type":"AI","max_limit":0.15,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"270","tag_no":"PT-3104","tag_dcs":"PI-3104","service":"AMMONIA STORAGE","io_loc":"ESD","io_type":"AI","max_limit":0.15,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"271","tag_no":"PT-3106","tag_dcs":"PI-3106","service":"AMMONIA STORAGE","io_loc":"ESD","io_type":"AI","max_limit":0.15,"unit":"kg/cm2g","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"272","tag_no":"LIC-2107","tag_dcs":"LIC-2107","service":"DEAERATOR AND BFW PUMP","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"273","tag_no":"LT-2106A","tag_dcs":"LI-2106A","service":"DEAERATOR AND BFW PUMP","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"274","tag_no":"LT-2106B","tag_dcs":"LI-2106B","service":"DEAERATOR AND BFW PUMP","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"275","tag_no":"LT-2106C","tag_dcs":"LI-2106C","service":"DEAERATOR AND BFW PUMP","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"276","tag_no":"LI-2303","tag_dcs":"LI-2303","service":"DESALINATED WATER TANK","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"277","tag_no":"LT-2304","tag_dcs":"LI-2304","service":"DESALINATED WATER TANK","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"278","tag_no":"LI-2317","tag_dcs":"LI-2317","service":"POLISHED WATER TANK","io_loc":"DCS","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"279","tag_no":"LT-2316","tag_dcs":"LI-2316","service":"POLISHED WATER TANK","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"280","tag_no":"LT-2201A","tag_dcs":"LI-2201A","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"281","tag_no":"LT-2201B","tag_dcs":"LI-2201B","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"282","tag_no":"LT-2201C","tag_dcs":"LI-2201C","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"283","tag_no":"ZT-2202","tag_dcs":"ZT-2202","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"284","tag_no":"ZT-2203","tag_dcs":"ZT-2203","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"285","tag_no":"ZT-2204","tag_dcs":"ZT-2204","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""},{"id":"286","tag_no":"ZT-2205","tag_dcs":"ZT-2205","service":"SEA WATER INTAKE","io_loc":"ESD","io_type":"AI","max_limit":100.0,"unit":"%","reading_value":null,"tx_condition":"","date_checked":"","notes":""}];
+
+// ===== STATE =====
+let currentUser = null;
+let tags = [];
+let filteredTags = [];
+let currentPage = 1;
+let sortCol = 'id', sortDir = 1;
+let selectedTagId = null;
+let auditLog = [];
+let loginAttempts = 0;
+
+// Load from localStorage or use embedded RAW_TAGS
+async function loadState() {
+  const saved = localStorage.getItem('pdmesd_tags');
+  if (saved) {
+    tags = JSON.parse(saved);
+  } else {
+    // Use embedded RAW_TAGS data directly instead of fetching external file
+    // This avoids CORS issues when opening via file:// protocol
+    try {
+      const rawTagsData = RAW_TAGS;
+      tags = rawTagsData.map(t => ({
+        id: String(t.id), // Ensure ID is string for consistency
+        tag_no: t.tag_no ?? '',
+        tag_dcs: t.tag_dcs ?? '',
+        service: t.service ?? '',
+        io_loc: t.io_loc ?? '',
+        io_type: t.io_type ?? '',
+        max_limit: parseFloat(t.max_limit) || 0, // Ensure number
+        unit: t.unit ?? '',
+        reading_value: t.reading_value ?? null,
+        tx_condition: t.tx_condition ?? '',
+        date_checked: t.date_checked ?? '',
+        notes: t.notes ?? ''
+      }));
+      // Assign unique IDs if not present or not unique (important for table keys)
+      tags.forEach((tag, index) => {
+        if (!tag.id || tags.filter(t => t.id === tag.id).length > 1) {
+          tag.id = `generated-${index}-${Date.now()}`;
+        }
+      });
+    } catch (error) {
+      console.error("Error loading tags:", error);
+      showToast('danger', 'Gagal memuat data TAG. Menggunakan data kosong.');
+      tags = [];
+    }
+  }
+  const savedAudit = localStorage.getItem('pdmesd_audit');
+  if (savedAudit) auditLog = JSON.parse(savedAudit);
+
+  tags.forEach(t => { t.status = calcStatus(t); });
+}
+function saveState() {
+  localStorage.setItem('pdmesd_tags', JSON.stringify(tags));
+  localStorage.setItem('pdmesd_audit', JSON.stringify(auditLog));
+}
+
+function calcStatus(tag) {
+  if (tag.reading_value === null || tag.reading_value === undefined || tag.reading_value === '') return 'Empty';
+  const rv = parseFloat(tag.reading_value), mx = parseFloat(tag.max_limit);
+  if (rv > mx) return 'Critical';
+  if (rv >= mx * 0.9) return 'Warning';
+  return 'Normal';
+}
+
+function statusBadge(status) {
+  const m = {Normal:'badge-normal',Warning:'badge-warning',Critical:'badge-critical',Empty:'badge-empty'};
+  const icons = {Normal:'check-circle-fill',Warning:'exclamation-triangle-fill',Critical:'x-circle-fill',Empty:'dash-circle'};
+  const label = {Normal:'Normal',Warning:'Warning',Critical:'Critical',Empty:'Belum Input'};
+  return `<span class="status-badge ${m[status]||'badge-empty'}"><i class="bi bi-${icons[status]||'dash-circle'} me-1"></i>${label[status]||status}</span>`;
+}
+
+function fmtNum(v) {
+  if (v === null || v === undefined || v === '') return '-';
+  return parseFloat(v).toLocaleString('id-ID');
+}
+
+// ===== AUTH =====
+function togglePwd() {
+  const f = document.getElementById('loginPassword');
+  const i = document.getElementById('eyeIcon');
+  if (f.type==='password') { f.type='text'; i.className='bi bi-eye-slash'; }
+  else { f.type='password'; i.className='bi bi-eye'; }
+}
+
+async function doLogin() { // Make it async
+  if (loginAttempts >= 5) { showAlert('loginAlert','danger','Terlalu banyak percobaan. Coba lagi nanti.'); return; }
+  const username = document.getElementById('loginUsername').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  const user = USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === pw);
+  if (!user) {
+    loginAttempts++;
+    showAlert('loginAlert','danger',`Username/password salah. (${5-loginAttempts} percobaan tersisa)`);
+    return;
+  }
+  loginAttempts = 0;
+  currentUser = user;
+  document.getElementById('userDisplay').textContent = user.name;
+  document.getElementById('userEmail').textContent = user.username + ' (' + user.role + ')';
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appPage').style.display = 'block';
+  await loadState(); // Await the async loadState
+  updateDashboard();
+  populateFilters();
+  applyFilters();
+  renderAudit();
+  addAudit('LOGIN', 'system', user.username, {});
+  showToast('success', `Selamat datang, ${user.name}!`);
+}
+
+function doLogout() {
+  addAudit('LOGOUT', 'system', currentUser?.username, {});
+  saveState();
+  currentUser = null;
+  document.getElementById('appPage').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+}
+
+function showAlert(id, type, msg) {
+  document.getElementById(id).innerHTML = `<div class="alert alert-${type} alert-dismissible fade show py-2" role="alert">${msg}<button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button></div>`;
+}
+
+// ===== NAV =====
+function showPage(page) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('sec-'+page).classList.add('active');
+  event?.target?.classList?.add('active');
+  const titles = {dashboard:'Dashboard',tags:'Data TAG DCS/ESD',input:'Edit Data',batchinput:'Input Batch',export:'Export / Import Data',audit:'Audit Log'};
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  if (page === 'tags') { applyFilters(); }
+  if (page === 'dashboard') updateDashboard();
+  if (page === 'audit') renderAudit();
+  if (page === 'batchinput') { initBatchInput(); }
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const m = document.getElementById('mainContent');
+  s.classList.toggle('collapsed');
+  m.classList.toggle('expanded');
+}
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = new Date();
+  document.getElementById('currentDateTime').textContent = now.toLocaleString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const h = now.getHours();
+  const shift = h >= 7 && h < 15 ? 'Shift Pagi' : h >= 15 && h < 23 ? 'Shift Sore' : 'Shift Malam';
+  document.getElementById('shiftBadge').textContent = shift;
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ===== DASHBOARD =====
+function updateDashboard() {
+  const n = tags.filter(t => t.status==='Normal').length;
+  const w = tags.filter(t => t.status==='Warning').length;
+  const c = tags.filter(t => t.status==='Critical').length;
+  const e = tags.filter(t => t.status==='Empty').length;
+  const total = tags.length;
+  const inputted = total - e;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statNormal').textContent = n;
+  document.getElementById('statWarning').textContent = w;
+  document.getElementById('statCritical').textContent = c;
+  document.getElementById('statEmpty').textContent = e;
+  const pN = total>0 ? (n/total*100).toFixed(1) : 0;
+  const pW = total>0 ? (w/total*100).toFixed(1) : 0;
+  const pC = total>0 ? (c/total*100).toFixed(1) : 0;
+  const pI = total>0 ? (inputted/total*100).toFixed(1) : 0;
+  ['Normal','Warning','Critical'].forEach(s => {
+    const v = s==='Normal'?pN:s==='Warning'?pW:pC;
+    document.getElementById('pct'+s).textContent = v+'%';
+    document.getElementById('bar'+s).style.width = v+'%';
+  });
+  document.getElementById('pctInput').textContent = pI+'%';
+  document.getElementById('barInput').style.width = pI+'%';
+  // IO Distribution
+  const esdCount = tags.filter(t => t.io_loc==='ESD').length;
+  const dcsCount = tags.filter(t => t.io_loc==='DCS').length;
+  document.getElementById('ioDistribution').innerHTML = `
+    <div class="d-flex justify-content-between mb-1"><span>ESD</span><span class="fw-bold">${esdCount} tag (${(esdCount/total*100).toFixed(0)}%)</span></div>
+    <div class="progress progress-mini mb-3"><div class="progress-bar bg-danger" style="width:${esdCount/total*100}%"></div></div>
+    <div class="d-flex justify-content-between mb-1"><span>DCS</span><span class="fw-bold">${dcsCount} tag (${(dcsCount/total*100).toFixed(0)}%)</span></div>
+    <div class="progress progress-mini"><div class="progress-bar bg-primary" style="width:${dcsCount/total*100}%"></div></div>
+  `;
+  // Alert list
+  const alerts = tags.filter(t => t.status==='Critical'||t.status==='Warning').slice(0,5);
+  document.getElementById('alertList').innerHTML = alerts.length ? alerts.map(t =>
+    `<div class="d-flex justify-content-between align-items-center py-1">
+      <span class="small fw-semibold">${t.tag_dcs}</span>${statusBadge(t.status)}
+    </div>`).join('') : '<div class="text-success small"><i class="bi bi-check-circle me-1"></i>Tidak ada TAG bermasalah</div>';
+  // Recent table
+  const recent = tags.filter(t => t.date_checked).sort((a,b) => b.date_checked.localeCompare(a.date_checked)).slice(0,10);
+  document.getElementById('recentTable').innerHTML = recent.length ? recent.map(t =>
+    `<tr><td><code class="text-primary">${t.tag_dcs}</code></td><td class="small">${t.service}</td>
+    <td class="fw-bold">${fmtNum(t.reading_value)}</td><td>${fmtNum(t.max_limit)}</td>
+    <td>${t.unit}</td><td>${statusBadge(t.status)}</td><td class="small text-muted">${t.date_checked}</td></tr>`).join('')
+    : '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada data reading yang diinput</td></tr>';
+}
+
+// ===== FILTERS =====
+function populateFilters() {
+  const units = [...new Set(tags.map(t => t.unit).filter(Boolean))].sort();
+  const sel = document.getElementById('filterUnit');
+  sel.innerHTML = '<option value="">Semua Unit</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
+}
+
+function applyFilters() {
+  const q = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+  const loc = document.getElementById('filterLoc')?.value || '';
+  const status = document.getElementById('filterStatus')?.value || '';
+  const unit = document.getElementById('filterUnit')?.value || '';
+  filteredTags = tags.filter(t => {
+    if (q && !t.tag_dcs.toLowerCase().includes(q) && !t.tag_no.toLowerCase().includes(q) && !t.service.toLowerCase().includes(q)) return false;
+    if (loc && t.io_loc !== loc) return false;
+    if (status && t.status !== status) return false;
+    if (unit && t.unit !== unit) return false;
+    return true;
+  });
+  // sort
+  filteredTags.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'id' || sortCol === 'max_limit' || sortCol === 'reading_value') { va=parseFloat(va)||0; vb=parseFloat(vb)||0; }
+    if (va < vb) return -sortDir; if (va > vb) return sortDir; return 0;
+  });
+  document.getElementById('filteredCount').textContent = filteredTags.length + ' TAG';
+  goPage(1);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterLoc').value = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterUnit').value = '';
+  applyFilters();
+}
+
+function filterByStatus(s) {
+  showPage('tags');
+  if (s !== 'all') document.getElementById('filterStatus').value = s;
+  else document.getElementById('filterStatus').value = '';
+  applyFilters();
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  applyFilters();
+}
+
+// ===== TABLE RENDER =====
+function goPage(p) {
+  const rpp = parseInt(document.getElementById('rowsPerPage')?.value || 25);
+  const total = filteredTags.length;
+  const pages = Math.ceil(total / rpp);
+  if (p < 1) p = 1; if (p > pages) p = pages;
+  currentPage = p;
+  const start = (p-1)*rpp, end = Math.min(start+rpp, total);
+  const pageData = filteredTags.slice(start, end);
+  const tbody = document.getElementById('tagTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = pageData.map(t => {
+    const pct = t.reading_value !== null && t.reading_value !== undefined && t.reading_value !== '' ? Math.min((parseFloat(t.reading_value)/parseFloat(t.max_limit)*100),200).toFixed(1) : null;
+    return `<tr>
+      <td><input type="checkbox" class="row-check" data-id="${t.id}"></td>
+      <td class="text-muted small">${t.id}</td>
+      <td><code class="text-secondary">${t.tag_no}</code></td>
+      <td><code class="text-primary fw-bold">${t.tag_dcs}</code></td>
+      <td class="small" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.service}">${t.service}</td>
+      <td><span class="badge ${t.io_loc==='ESD'?'bg-danger':'bg-primary'} bg-opacity-75">${t.io_loc}</span></td>
+      <td class="text-end">${fmtNum(t.max_limit)}</td>
+      <td><span class="badge bg-light text-dark">${t.unit}</span></td>
+      <td class="text-end fw-bold ${t.status==='Critical'?'text-danger':t.status==='Warning'?'text-warning':''}">
+        ${t.reading_value !== null && t.reading_value !== '' ? fmtNum(t.reading_value) : '<span class="text-muted">-</span>'}
+        ${pct ? `<div class="progress progress-mini mt-1" style="width:60px"><div class="progress-bar ${t.status==='Critical'?'bar-critical':t.status==='Warning'?'bar-warning':'bar-normal'}" style="width:${Math.min(pct,100)}%"></div></div>` : ''}
+      </td>
+      <td>${statusBadge(t.status)}</td>
+      <td class="small">${t.tx_condition||'-'}</td>
+      <td class="small text-muted">${t.date_checked||'-'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="openInputModal('${t.id}')" title="Input Reading"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-info py-0 px-2 ms-1" onclick="viewTag('${t.id}')" title="Detail"><i class="bi bi-eye"></i></button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="13" class="text-center text-muted py-4"><i class="bi bi-search me-2"></i>Tidak ada data ditemukan</td></tr>';
+
+  document.getElementById('tableInfo').textContent = total > 0 ? `Menampilkan ${start+1}-${end} dari ${total} TAG` : 'Tidak ada data';
+  document.getElementById('paginationInfo').textContent = `Halaman ${p} dari ${pages}`;
+  renderPagination(p, pages);
+}
+
+function renderPagination(p, pages) {
+  const ul = document.getElementById('pagination');
+  if (!ul) return;
+  let html = `<li class="page-item ${p<=1?'disabled':''}"><a class="page-link" href="#" onclick="goPage(${p-1})">‹</a></li>`;
+  let start = Math.max(1, p-2), end = Math.min(pages, p+2);
+  if (start > 1) html += `<li class="page-item"><a class="page-link" href="#" onclick="goPage(1)">1</a></li>${start>2?'<li class="page-item disabled"><span class="page-link">…</span></li>':''}`;
+  for (let i=start; i<=end; i++) html += `<li class="page-item ${i===p?'active':''}"><a class="page-link" href="#" onclick="goPage(${i})">${i}</a></li>`;
+  if (end < pages) html += `${end<pages-1?'<li class="page-item disabled"><span class="page-link">…</span></li>':''}<li class="page-item"><a class="page-link" href="#" onclick="goPage(${pages})">${pages}</a></li>`;
+  html += `<li class="page-item ${p>=pages?'disabled':''}"><a class="page-link" href="#" onclick="goPage(${p+1})">›</a></li>`;
+  ul.innerHTML = html;
+}
+
+function toggleSelectAll(el) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = el.checked);
+}
+
+// ===== INPUT READING (modal) =====
+let modalTagId = null;
+function openInputModal(id) {
+  const tag = tags.find(t => t.id == id);
+  if (!tag) return;
+  modalTagId = id;
+  const pct = tag.reading_value !== null ? Math.min((parseFloat(tag.reading_value)/parseFloat(tag.max_limit)*100),200).toFixed(1) : null;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="row">
+      <div class="col-md-6">
+        <div class="reading-input-section mb-3">
+          <div class="tag-detail-row"><label>TAG No.</label><span>${tag.tag_no}</span></div>
+          <div class="tag-detail-row"><label>TAG DCS</label><span class="text-primary fw-bold">${tag.tag_dcs}</span></div>
+          <div class="tag-detail-row"><label>Service</label><span>${tag.service}</span></div>
+          <div class="tag-detail-row"><label>I/O Location</label><span><b class="${tag.io_loc==='ESD'?'text-danger':'text-primary'}">${tag.io_loc}</b></span></div>
+          <div class="tag-detail-row"><label>MAX Limit</label><span class="text-danger fw-bold">${fmtNum(tag.max_limit)} ${tag.unit}</span></div>
+          <div class="tag-detail-row"><label>Warning Threshold (90%)</label><span class="text-warning fw-bold">${fmtNum(tag.max_limit*0.9)} ${tag.unit}</span></div>
+          ${tag.notes ? `<div class="tag-detail-row"><label>Notes</label><span class="text-muted small">${tag.notes}</span></div>` : ''}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Reading Value <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="number" id="mReadingVal" class="form-control" min="0" value="${tag.reading_value ?? ''}" placeholder="Masukkan nilai..." oninput="calcModalStatus()">
+            <span class="input-group-text">${tag.unit}</span>
+          </div>
+          <div id="mStatusPreview" class="mt-2"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Catatan</label>
+          <textarea id="mNotes" class="form-control" rows="2">${tag.notes||''}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+  new bootstrap.Modal(document.getElementById('inputModal')).show();
+  calcModalStatus();
+}
+
+function calcModalStatus() {
+  const el = document.getElementById('mReadingVal');
+  const prev = document.getElementById('mStatusPreview');
+  if (!el || !prev) return;
+  const tag = tags.find(t => t.id == modalTagId);
+  if (!tag) return;
+  const rv = parseFloat(el.value);
+  if (isNaN(rv)) { prev.innerHTML = ''; return; }
+  const st = rv > tag.max_limit ? 'Critical' : rv >= tag.max_limit*0.9 ? 'Warning' : 'Normal';
+  const pct = (rv/tag.max_limit*100).toFixed(1);
+  prev.innerHTML = `${statusBadge(st)} <small class="text-muted ms-2">${pct}% dari MAX (${fmtNum(tag.max_limit)} ${tag.unit})</small>`;
+}
+
+function saveModalReading() {
+  const tag = tags.find(t => t.id == modalTagId);
+  if (!tag) return;
+  const rv = document.getElementById('mReadingVal').value;
+  if (rv === '' || rv === null) { alert('Reading value wajib diisi!'); return; }
+  if (parseFloat(rv) < 0) { alert('Reading value tidak boleh negatif!'); return; }
+  const newStatus = parseFloat(rv) > tag.max_limit ? 'Critical' : parseFloat(rv) >= tag.max_limit*0.9 ? 'Warning' : 'Normal';
+  if (newStatus === 'Critical') {
+    document.getElementById('confirmBody').innerHTML = `<p>⚠️ Reading value <b>${fmtNum(rv)} ${tag.unit}</b> melebihi MAX limit <b>${fmtNum(tag.max_limit)} ${tag.unit}</b> untuk TAG <b>${tag.tag_dcs}</b>.</p><p>Apakah Anda yakin ingin menyimpan data ini?</p>`;
+    const cm = new bootstrap.Modal(document.getElementById('confirmModal'));
+    cm.show();
+    document.getElementById('confirmOkBtn').onclick = () => { cm.hide(); doSaveModal(tag, rv); };
+    return;
+  }
+  doSaveModal(tag, rv);
+}
+
+function doSaveModal(tag, rv) {
+  const old = {...tag};
+  tag.reading_value = parseFloat(rv);
+  // Auto calculate tx_condition based on reading vs MAX
+  const newStatus = parseFloat(rv) > tag.max_limit ? 'Critical' : parseFloat(rv) >= tag.max_limit*0.9 ? 'Warning' : 'Normal';
+  tag.tx_condition = newStatus;
+  tag.date_checked = new Date().toISOString().slice(0,16).replace('T',' '); // Auto-set current datetime
+  tag.notes = document.getElementById('mNotes').value;
+  tag.status = calcStatus(tag);
+  addAudit('UPDATE', 'pdmesd_tags', tag.tag_dcs, {old: {reading_value: old.reading_value, status: old.status}, new: {reading_value: tag.reading_value, status: tag.status}});
+  saveState();
+  bootstrap.Modal.getInstance(document.getElementById('inputModal'))?.hide();
+  updateDashboard();
+  applyFilters();
+  showToast('success', `Reading ${tag.tag_dcs} berhasil disimpan: ${fmtNum(rv)} ${tag.unit} (${tag.status})`);
+}
+
+// ===== INPUT PAGE =====
+function searchTags() {
+  const q = document.getElementById('tagSearch').value.toLowerCase();
+  const suggestions = document.getElementById('tagSuggestions');
+  if (!q || q.length < 2) { suggestions.style.display = 'none'; return; }
+  const matches = tags.filter(t => t.tag_dcs.toLowerCase().includes(q) || t.tag_no.toLowerCase().includes(q)).slice(0,8);
+  if (!matches.length) { suggestions.style.display = 'none'; return; }
+  suggestions.innerHTML = matches.map(t =>
+    `<a href="#" class="list-group-item list-group-item-action py-2" onclick="selectTag('${t.id}'); return false;">
+      <div class="d-flex justify-content-between"><strong>${t.tag_dcs}</strong><span class="badge bg-light text-dark">${t.io_loc}</span></div>
+      <small class="text-muted">${t.service}</small>
+    </a>`).join('');
+  suggestions.style.display = 'block';
+}
+
+function selectTag(id) {
+  document.getElementById('tagSuggestions').style.display = 'none';
+  const tag = tags.find(t => t.id == id);
+  if (!tag) return;
+  selectedTagId = id;
+  document.getElementById('tagSearch').value = tag.tag_dcs;
+  document.getElementById('d_tag_no').textContent = tag.tag_no;
+  document.getElementById('d_tag_dcs').textContent = tag.tag_dcs;
+  document.getElementById('d_service').textContent = tag.service;
+  document.getElementById('d_io_loc').textContent = tag.io_loc;
+  document.getElementById('d_io_type').textContent = tag.io_type;
+  document.getElementById('d_max').textContent = fmtNum(tag.max_limit) + ' ' + tag.unit;
+  document.getElementById('d_unit').textContent = tag.unit;
+  document.getElementById('d_notes').textContent = tag.notes || '-';
+  document.getElementById('tagDetailCard').style.display = 'block';
+  document.getElementById('inputFormArea').style.display = 'block';
+  document.getElementById('inputFormEmpty').style.display = 'none';
+  document.getElementById('readingUnit').textContent = tag.unit;
+  document.getElementById('readingValue').value = tag.reading_value ?? '';
+  document.getElementById('inputNotes').value = tag.notes || '';
+  calcStatus2();
+}
+
+function calcStatus2() {
+  const tag = tags.find(t => t.id == selectedTagId);
+  if (!tag) return;
+  const rv = parseFloat(document.getElementById('readingValue').value);
+  const prev = document.getElementById('statusPreview');
+  if (isNaN(rv)) { prev.innerHTML = ''; return; }
+  const st = rv > tag.max_limit ? 'Critical' : rv >= tag.max_limit*0.9 ? 'Warning' : 'Normal';
+  const pct = (rv/tag.max_limit*100).toFixed(1);
+  prev.innerHTML = `${statusBadge(st)} <small class="text-muted">${pct}% dari MAX (${fmtNum(tag.max_limit)} ${tag.unit})</small>`;
+}
+
+function saveReading() {
+  const tag = tags.find(t => t.id == selectedTagId);
+  if (!tag) { showToast('danger','Pilih TAG terlebih dahulu!'); return; }
+  const rv = document.getElementById('readingValue').value;
+  if (!rv) { showToast('danger','Reading value wajib diisi!'); return; }
+  if (parseFloat(rv) < 0) { showToast('danger','Reading value tidak boleh negatif!'); return; }
+  // Auto calculate tx_condition based on reading vs MAX
+  const newStatus = parseFloat(rv) > tag.max_limit ? 'Critical' : parseFloat(rv) >= tag.max_limit*0.9 ? 'Warning' : 'Normal';
+  if (newStatus === 'Critical') {
+    if (!confirm(`⚠️ CRITICAL: ${fmtNum(rv)} ${tag.unit} melebihi MAX ${fmtNum(tag.max_limit)}. Simpan?`)) return;
+  }
+  tag.reading_value = parseFloat(rv);
+  tag.tx_condition = newStatus; // Auto-set based on comparison
+  tag.date_checked = new Date().toISOString().slice(0,16).replace('T',' '); // Auto-set current datetime
+  tag.notes = document.getElementById('inputNotes').value;
+  tag.status = calcStatus(tag);
+  addAudit('UPDATE', 'pdmesd_tags', tag.tag_dcs, {reading_value: tag.reading_value, status: tag.status});
+  saveState();
+  updateDashboard();
+  showToast('success', `✓ Reading ${tag.tag_dcs}: ${fmtNum(rv)} ${tag.unit} (${tag.status})`);
+}
+
+function clearInputForm() {
+  selectedTagId = null;
+  document.getElementById('tagSearch').value = '';
+  document.getElementById('tagDetailCard').style.display = 'none';
+  document.getElementById('inputFormArea').style.display = 'none';
+  document.getElementById('inputFormEmpty').style.display = 'block';
+}
+
+// ===== VIEW TAG =====
+function viewTag(id) {
+  openInputModal(id);
+}
+
+// ===== EXPORT =====
+function getExportData(data) {
+  return data.map((t, i) => ({
+    'No': i+1,
+    'TAG No.': t.tag_no,
+    'TAG DCS': t.tag_dcs,
+    'Service': t.service,
+    'I/O Loc': t.io_loc,
+    'I/O Type': t.io_type,
+    'MAX Limit': t.max_limit,
+    'Unit': t.unit,
+    'Reading Value': t.reading_value ?? '',
+    'Status': t.status,
+    'Tx Condition': t.tx_condition || '',
+    'Date Checked': t.date_checked || '',
+    'Notes': t.notes || ''
+  }));
+}
+
+function doExport(data, filename) {
+  const ws = XLSX.utils.json_to_sheet(data);
+  // Styling header
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = XLSX.utils.encode_cell({r:0, c});
+    if (!ws[cell]) continue;
+    ws[cell].s = { fill:{fgColor:{rgb:'1E3C72'}}, font:{bold:true, color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center'} };
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PDM_ESD Data');
+  XLSX.writeFile(wb, filename + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  addAudit('EXPORT', 'pdmesd_tags', 'Excel', {count: data.length});
+  showToast('success', `Export ${data.length} baris berhasil!`);
+}
+
+function exportAll() { doExport(getExportData(tags), 'PDMESD_ALL'); }
+function exportFiltered() { doExport(getExportData(filteredTags.length ? filteredTags : tags), 'PDMESD_FILTERED'); }
+function exportIssues() {
+  const issues = tags.filter(t => t.status==='Critical'||t.status==='Warning');
+  if (!issues.length) { showToast('warning','Tidak ada TAG Critical atau Warning.'); return; }
+  doExport(getExportData(issues), 'PDMESD_ISSUES');
+}
+function exportSummary() {
+  const n = tags.filter(t=>t.status==='Normal').length;
+  const w = tags.filter(t=>t.status==='Warning').length;
+  const c = tags.filter(t=>t.status==='Critical').length;
+  const e = tags.filter(t=>t.status==='Empty').length;
+  const data = [
+    {Metric:'Total TAG', Value:tags.length},
+    {Metric:'Normal', Value:n, Pct:`${(n/tags.length*100).toFixed(1)}%`},
+    {Metric:'Warning', Value:w, Pct:`${(w/tags.length*100).toFixed(1)}%`},
+    {Metric:'Critical', Value:c, Pct:`${(c/tags.length*100).toFixed(1)}%`},
+    {Metric:'Belum Input', Value:e, Pct:`${(e/tags.length*100).toFixed(1)}%`},
+    {Metric:'ESD Tags', Value:tags.filter(t=>t.io_loc==='ESD').length},
+    {Metric:'DCS Tags', Value:tags.filter(t=>t.io_loc==='DCS').length},
+    {Metric:'Export Time', Value:new Date().toLocaleString('id-ID')},
+  ];
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+  XLSX.writeFile(wb, 'PDMESD_Summary_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  showToast('success','Summary report berhasil di-export!');
+}
+
+function downloadTemplate() {
+  const template = [{
+    'TAG No.':'FT-1257','TAG DCS':'FI-1257','Service':'102-B SCTN FLOW ESD',
+    'I/O Loc':'ESD','I/O Type':'AI','MAX Limit':212500,'Unit':'Nm3/h',
+    'Reading Value':185000,'Tx Condition':'Normal','Date Checked':'31/03/2026 08:00','Notes':'Contoh'
+  }];
+  const ws = XLSX.utils.json_to_sheet(template);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Template');
+  XLSX.writeFile(wb, 'PDMESD_Import_Template.xlsx');
+}
+
+function handleImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws);
+      let updated = 0, skipped = 0;
+      data.forEach(row => {
+        const tagDcs = row['TAG DCS'] || row['tag_dcs'];
+        const rv = row['Reading Value'] || row['reading_value'];
+        const tag = tags.find(t => t.tag_dcs === tagDcs);
+        if (tag && rv !== undefined && rv !== '') {
+          tag.reading_value = parseFloat(rv);
+          tag.tx_condition = row['Tx Condition'] || row['tx_condition'] || 'Normal';
+          tag.date_checked = String(row['Date Checked'] || row['date_checked'] || '');
+          tag.notes = String(row['Notes'] || row['notes'] || '');
+          tag.status = calcStatus(tag);
+          updated++;
+        } else skipped++;
+      });
+      saveState();
+      updateDashboard();
+      applyFilters();
+      document.getElementById('importResult').innerHTML = `<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i><b>${updated}</b> TAG berhasil diupdate, <b>${skipped}</b> baris dilewati.</div>`;
+      addAudit('IMPORT', 'pdmesd_tags', file.name, {updated, skipped});
+    } catch(err) {
+      document.getElementById('importResult').innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ===== AUDIT =====
+function addAudit(action, table, record, detail) {
+  let detailString = detail;
+  if (typeof detail === 'object' && detail !== null) {
+    detailString = JSON.stringify(detail);
+  }
+  auditLog.unshift({
+    timestamp: new Date().toLocaleString('id-ID'),
+    user: currentUser?.username || 'system',
+    action, table, record,
+    detail: detailString
+  });
+  if (auditLog.length > 500) auditLog = auditLog.slice(0,500);
+}
+
+function renderAudit() {
+  const tbody = document.getElementById('auditTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = auditLog.slice(0,50).map(a => {
+    const c = {LOGIN:'success',LOGOUT:'secondary',UPDATE:'primary',EXPORT:'info',IMPORT:'warning',CREATE:'success',DELETE:'danger'};
+    return `<tr><td class="small text-muted">${a.timestamp}</td><td class="small">${a.user}</td>
+    <td><span class="badge bg-${c[a.action]||'secondary'}">${a.action}</span></td>
+    <td><code class="small">${a.record}</code></td>
+    <td class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${a.detail}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada aktivitas</td></tr>';
+}
+
+// ===== TOAST =====
+function showToast(type, msg) {
+  const id = 'toast_'+Date.now();
+  const icons = {success:'check-circle-fill', danger:'x-circle-fill', warning:'exclamation-triangle-fill', info:'info-circle-fill'};
+  const div = document.createElement('div');
+  div.innerHTML = `<div id="${id}" class="alert alert-${type} alert-fixed d-flex align-items-center gap-2 shadow" style="animation:slideIn .3s ease">
+    <i class="bi bi-${icons[type]||'info-circle'}"></i><span>${msg}</span>
+    <button type="button" class="btn-close ms-auto" onclick="this.parentElement.remove()"></button>
+  </div>`;
+  document.getElementById('toastArea').appendChild(div.firstChild);
+  setTimeout(() => document.getElementById(id)?.remove(), 4000);
+}
+
+// ===== BATCH INPUT =====
+let batchTags = [];
+let batchCurrentIndex = 0;
+let batchCompleted = 0;
+let batchSkipped = 0;
+
+// ===== TTS & VOICE INPUT =====
+let recognition = null;
+let isListening = false;
+
+// Check if Speech Recognition is supported
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// Initialize speech recognition with better error handling
+function initSpeechRecognition() {
+  if (!SpeechRecognition) {
+    showToast('danger', '❌ Browser tidak support Speech Recognition. Gunakan Chrome/Edge.');
+    return null;
+  }
+  
+  const recognizer = new SpeechRecognition();
+  recognizer.continuous = false;
+  recognizer.lang = 'id-ID';
+  recognizer.interimResults = true;
+  recognizer.maxAlternatives = 3;
+  
+  recognizer.onresult = (event) => {
+    let transcript = '';
+    let confidence = 0;
+    
+    for (let i = 0; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        transcript = event.results[i][0].transcript;
+        confidence = event.results[i][0].confidence;
+        break;
+      }
+    }
+    
+    if (!transcript && event.results[0]) {
+      transcript = event.results[0][0].transcript;
+      confidence = event.results[0][0].confidence;
+    }
+    
+    transcript = transcript.trim().toLowerCase();
+    console.log('Voice input:', transcript, 'confidence:', confidence);
+    
+    const numValue = convertSpokenNumber(transcript);
+    if (numValue !== null) {
+      document.getElementById('batchReadingValue').value = numValue;
+      calcBatchStatus();
+      showToast('success', `✅ Nilai ${numValue} dari suara`);
+    } else {
+      showToast('warning', `Tidak mengerti: "${transcript}". Coba lagi.`);
+    }
+  };
+  
+  recognizer.onend = () => {
+    isListening = false;
+    updateMicButton();
+  };
+  
+  recognizer.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    isListening = false;
+    updateMicButton();
+    
+    const errorMessages = {
+      'network': '❌ Error: perlu internet untuk voice input',
+      'no-speech': '⏳ Tidak ada suara terdeteksi, coba lagi',
+      'audio-capture': '❌ Microphone tidak tersedia/hardware error',
+      'not-allowed': '❌ Akses microphone ditolak. Izinkan akses microphone di browser!',
+      'aborted': '⏳ Dihentikan, coba lagi',
+      'service-not-allowed': '❌ Service tidak diizinkan'
+    };
+    
+    const msg = errorMessages[event.error] || `Error: ${event.error}`;
+    showToast('warning', msg);
+  };
+  
+  return recognizer;
+}
+
+// Try to request microphone permission and initialize
+async function requestMicPermission() {
+  // First check if we can access the microphone
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // If we got here, permission is granted - stop the stream
+    stream.getTracks().forEach(track => track.stop());
+    return true;
+  } catch (err) {
+    console.error('Microphone permission error:', err);
+    return false;
+  }
+}
+
+// Initialize recognition after getting permission
+async function toggleVoiceInput() {
+  if (!SpeechRecognition) {
+    showToast('danger', '❌ Browser tidak support Voice Input. Gunakan Chrome atau Edge.');
+    return;
+  }
+  
+  // Try to get microphone permission first
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(track => track.stop());
+  } catch (err) {
+    let msg = '❌ Tidak bisa akses microphone: ';
+    if (err.name === 'NotAllowedError') {
+      msg += 'Izin ditolak. Klik icon 🔒 di address bar untuk izinkan microphone!';
+    } else if (err.name === 'NotFoundError') {
+      msg += 'Microphone tidak ditemukan. Pasang microphone!';
+    } else {
+      msg += err.message;
+    }
+    showToast('danger', msg);
+    return;
+  }
+  
+  // Now initialize and start recognition
+  if (!recognition) {
+    recognition = initSpeechRecognition();
+  }
+  
+  if (!recognition) {
+    showToast('danger', '❌ Gagal initialize Speech Recognition');
+    return;
+  }
+  
+  if (isListening) {
+    recognition.stop();
+    isListening = false;
+    updateMicButton();
+    return;
+  }
+  
+  try {
+    recognition.start();
+    isListening = true;
+    updateMicButton();
+    showToast('info', '🎤 Mendengarkan... Ucapkan angka (contoh: "seratus lima puluh")');
+  } catch (e) {
+    console.error('Error starting recognition:', e);
+    isListening = false;
+    updateMicButton();
+    showToast('danger', '❌ Gagal memulai voice input: ' + e.message);
+  }
+}
+
+// Convert spoken numbers to actual numbers
+function convertSpokenNumber(text) {
+  text = text.toLowerCase().trim();
+  
+  // Remove any non-alphanumeric except dots and spaces
+  text = text.replace(/[^a-z0-9\s.]/g, '');
+  
+  // Handle direct number input (e.g., "150")
+  const directNum = parseFloat(text);
+  if (!isNaN(directNum) && text.length > 0) return directNum;
+  
+  // Handle "point" or "dot" for decimals
+  text = text.replace(/point/g, '.').replace(/koma/g, '.');
+  
+  // Indonesian number words
+  const ones = {
+    'nol': 0, 'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4,
+    'lima': 5, 'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9,
+    'sepuluh': 10, 'sebelas': 11, 'belas': 10, ' belas': 10,
+    'seratus': 100, 'ratus': 100,
+    'seribu': 1000, 'ribu': 1000, 'ribuan': 1000
+  };
+  
+  const tens = {
+    'dua puluh': 20, 'tiga puluh': 30, 'empat puluh': 40, 'lima puluh': 50,
+    'enam puluh': 60, 'tujuh puluh': 70, 'delapan puluh': 80, 'sembilan puluh': 90,
+    'puluh': 10
+  };
+  
+  // English number words (fallback)
+  const onesEn = {
+    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+    'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+    'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13,
+    'fourteen': 14, 'fifteen': 15, 'sixteen': 16, 'seventeen': 17,
+    'eighteen': 18, 'nineteen': 19,
+    'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+    'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+    'hundred': 100, 'thousand': 1000, 'million': 1000000
+  };
+  
+  // Merge all number words
+  const allOnes = {...ones, ...onesEn};
+  const allTens = {...tens};
+  
+  // Parse compound numbers
+  try {
+    let result = 0;
+    let current = 0;
+    const words = text.split(/[\s-]+/);
+    
+    for (let word of words) {
+      if (!word) continue;
+      
+      // Check ones first
+      if (allOnes[word] !== undefined) {
+        current += allOnes[word];
+      }
+      // Check tens (like "dua puluh")
+      else if (allTens[word] !== undefined) {
+        current += allTens[word];
+      }
+      // Check for "puluh" suffix in Indonesian (like "lima puluh")
+      else if (word.endsWith('puluh') && word.length > 5) {
+        const base = word.replace('puluh', '');
+        if (allOnes[base] !== undefined) {
+          current += allOnes[base] * 10;
+        }
+      }
+      // Check for "belas" suffix in Indonesian (like "lima belas" = 15)
+      else if (word.endsWith('belas')) {
+        const base = word.replace('belas', '');
+        if (base === 'se') {
+          current += 10; // sebelas = 11
+          current += allOnes[base + 'belas'] || 0;
+        } else if (allOnes[base] !== undefined) {
+          current += allOnes[base] + 10;
+        }
+      }
+      // Check for "belas" as separate word
+      else if (word === 'belas' && current > 0 && current < 10) {
+        current += 10;
+      }
+      // Check for "ratus" (hundred)
+      else if (word === 'ratus' || word === 'ratusan') {
+        current = current === 0 ? 100 : current * 100;
+      }
+      // Check for "ribu" (thousand)
+      else if (word === 'ribu' || word === 'ribuan' || word === 'ribu') {
+        current = current * 1000;
+        result += current;
+        current = 0;
+      }
+      // English hundred/thousand
+      else if (word === 'hundred') {
+        current = current === 0 ? 1 : current * 100;
+      }
+      else if (word === 'thousand') {
+        current = current * 1000;
+        result += current;
+        current = 0;
+      }
+      else if (word === 'million') {
+        current = current * 1000000;
+        result += current;
+        current = 0;
+      }
+    }
+    result += current;
+    
+    if (result > 0) return result;
+  } catch (e) {
+    console.error('Error parsing number:', e);
+  }
+  
+  return null;
+}
+
+// Speak current TAG DCS using TTS
+function speakCurrentTag() {
+  const tag = batchTags[batchCurrentIndex];
+  if (!tag) {
+    showToast('warning', 'Tidak ada TAG yang dipilih');
+    return;
+  }
+  
+  const text = tag.tag_dcs;
+  
+  if ('speechSynthesis' in window) {
+    // Cancel any ongoing speech first
+    window.speechSynthesis.cancel();
+    
+    // Wait for cancel to complete
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Get available voices
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Try to find Indonesian voice first, then English, then any
+      let selectedVoice = null;
+      
+      // Priority: Indonesian > English US > Any
+      selectedVoice = voices.find(v => v.lang.includes('id')) || 
+                      voices.find(v => v.lang.includes('en-US')) ||
+                      voices.find(v => v.lang.includes('en')) ||
+                      voices[0];
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+      } else {
+        utterance.lang = 'id-ID'; // Fallback to Indonesian
+      }
+      
+      // Adjust settings for clearer output
+      utterance.rate = 0.85;  // Slightly slower
+      utterance.pitch = 1;
+      utterance.volume = 1.0;
+      
+      utterance.onstart = () => {
+        console.log('TTS started with voice:', selectedVoice?.name || 'default');
+      };
+      
+      utterance.onend = () => {
+        console.log('TTS finished');
+      };
+      
+      utterance.onerror = (e) => {
+        console.error('TTS error:', e);
+        showToast('danger', 'Gagal membaca TAG: ' + e.error);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+      showToast('info', '🔊 Membacakan: ' + text);
+    }, 150);
+  } else {
+    showToast('danger', 'Browser tidak support Text-to-Speech');
+  }
+}
+
+// Update mic button appearance
+function updateMicButton() {
+  const btn = document.getElementById('batchMicBtn');
+  if (!btn) return;
+  
+  if (isListening) {
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-danger');
+    btn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+  } else {
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-outline-danger');
+    btn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+  }
+}
+
+function initBatchInput() {
+  // Load batch tags from localStorage or start fresh
+  const savedProgress = localStorage.getItem('pdmesd_batch_progress');
+  if (savedProgress) {
+    try {
+      const progress = JSON.parse(savedProgress);
+      batchTags = progress.tags || [];
+      batchCurrentIndex = progress.currentIndex || 0;
+      batchCompleted = progress.completed || 0;
+      batchSkipped = progress.skipped || 0;
+    } catch(e) {
+      initFreshBatch();
+    }
+  } else {
+    initFreshBatch();
+  }
+  updateBatchProgress();
+  showCurrentBatchTag();
+}
+
+function initFreshBatch() {
+  batchTags = tags.map((t, i) => ({...t, originalIndex: i}));
+  batchCurrentIndex = 0;
+  batchCompleted = 0;
+  batchSkipped = 0;
+  saveBatchProgress();
+}
+
+function saveBatchProgress() {
+  localStorage.setItem('pdmesd_batch_progress', JSON.stringify({
+    tags: batchTags,
+    currentIndex: batchCurrentIndex,
+    completed: batchCompleted,
+    skipped: batchSkipped
+  }));
+}
+
+function startBatchInput() {
+  // Reset and start fresh
+  initFreshBatch();
+  updateBatchProgress();
+  showCurrentBatchTag();
+  document.getElementById('batchReadingValue').focus();
+  showToast('info', 'Input batch dimulai dari TAG pertama!');
+}
+
+function resetBatchInput() {
+  if (!confirm('Yakin ingin memulai ulang? Progress saat ini akan dihapus.')) return;
+  localStorage.removeItem('pdmesd_batch_progress');
+  initFreshBatch();
+  updateBatchProgress();
+  showCurrentBatchTag();
+  showToast('success', 'Progress direset. Mari mulai lagi!');
+}
+
+function updateBatchProgress() {
+  const total = batchTags.length;
+  const remaining = total - batchCompleted - batchSkipped;
+  const percent = total > 0 ? Math.round((batchCompleted / total) * 100) : 0;
+  
+  document.getElementById('batchProgressText').textContent = `${batchCompleted}/${total}`;
+  document.getElementById('batchProgressPercent').textContent = `${percent}%`;
+  document.getElementById('batchProgressBar').style.width = `${percent}%`;
+  document.getElementById('batchCompleted').textContent = batchCompleted;
+  document.getElementById('batchSkipped').textContent = batchSkipped;
+  document.getElementById('batchRemaining').textContent = remaining;
+  document.getElementById('batchTotal').textContent = total;
+  document.getElementById('batchCurrentIndex').textContent = `${batchCurrentIndex + 1}/${total}`;
+  
+  // Check completion
+  if (remaining === 0 && total > 0) {
+    document.getElementById('batchInputArea').style.display = 'none';
+    document.getElementById('batchCompleteMessage').style.display = 'block';
+  } else {
+    document.getElementById('batchInputArea').style.display = 'flex';
+    document.getElementById('batchCompleteMessage').style.display = 'none';
+  }
+}
+
+function showCurrentBatchTag() {
+  if (batchTags.length === 0) {
+    document.getElementById('batchCurrentTag').style.display = 'none';
+    document.getElementById('batchNoTag').style.display = 'block';
+    document.getElementById('batchInputForm').style.display = 'none';
+    document.getElementById('batchFormEmpty').style.display = 'block';
+    document.getElementById('batchNavButtons').style.display = 'none';
+    return;
+  }
+  
+  const tag = batchTags[batchCurrentIndex];
+  if (!tag) {
+    updateBatchProgress();
+    return;
+  }
+  
+  document.getElementById('batchNoTag').style.display = 'none';
+  document.getElementById('batchCurrentTag').style.display = 'block';
+  document.getElementById('batchInputForm').style.display = 'block';
+  document.getElementById('batchFormEmpty').style.display = 'none';
+  document.getElementById('batchNavButtons').style.display = 'block';
+  
+  // Fill tag details
+  document.getElementById('batchTagDcs').textContent = tag.tag_dcs;
+  document.getElementById('batchTagNo').textContent = tag.tag_no;
+  document.getElementById('batchTagService').textContent = tag.service || '-';
+  document.getElementById('batchTagIoLoc').innerHTML = tag.io_loc === 'ESD' ? '<span class="badge bg-danger">ESD</span>' : '<span class="badge bg-primary">DCS</span>';
+  document.getElementById('batchTagMax').textContent = fmtNum(tag.max_limit) + ' ' + tag.unit;
+  document.getElementById('batchReadingUnit').textContent = tag.unit;
+  
+  // Current reading
+  const currentReading = tag.reading_value !== null && tag.reading_value !== undefined ? fmtNum(tag.reading_value) : '-';
+  const currentStatus = tag.reading_value !== null ? statusBadge(tag.status) : '';
+  document.getElementById('batchCurrentReading').innerHTML = currentReading !== '-' ? `${currentReading} ${currentStatus}` : '<span class="text-muted">Belum diinput</span>';
+  
+  // Reset form
+  document.getElementById('batchReadingValue').value = '';
+  document.getElementById('batchNotes').value = '';
+  document.getElementById('batchStatusPreview').innerHTML = '';
+  
+  // Pre-fill if already has value
+  if (tag.reading_value !== null && tag.reading_value !== undefined) {
+    document.getElementById('batchReadingValue').value = tag.reading_value;
+    updateBatchStatusPreview();
+  }
+  
+  document.getElementById('batchCurrentIndex').textContent = `${batchCurrentIndex + 1}/${batchTags.length}`;
+  
+  // Auto-speak current tag when showing
+  speakCurrentTag();
+}
+
+function updateBatchStatusPreview() {
+  const tag = batchTags[batchCurrentIndex];
+  if (!tag) return;
+  
+  const input = document.getElementById('batchReadingValue');
+  const preview = document.getElementById('batchStatusPreview');
+  const rv = parseFloat(input.value);
+  
+  if (isNaN(rv) || rv < 0) {
+    preview.innerHTML = '';
+    return;
+  }
+  
+  const pct = (rv / tag.max_limit * 100).toFixed(1);
+  let status = 'Normal';
+  let color = 'success';
+  if (rv > tag.max_limit) { status = 'Critical'; color = 'danger'; }
+  else if (rv >= tag.max_limit * 0.9) { status = 'Warning'; color = 'warning'; }
+  
+  preview.innerHTML = `<span class="badge bg-${color}">${status}</span> <small class="text-muted">${pct}% dari MAX (${fmtNum(tag.max_limit)} ${tag.unit})</small>`;
+}
+
+// Alias for oninput handler
+function calcBatchStatus() {
+  updateBatchStatusPreview();
+}
+
+function saveBatchReading(action) {
+  const tag = batchTags[batchCurrentIndex];
+  if (!tag) return;
+  
+  const rv = document.getElementById('batchReadingValue').value;
+  
+  if (action !== 'skip' && (!rv || rv === '')) {
+    showToast('warning', 'Reading value wajib diisi!');
+    document.getElementById('batchReadingValue').focus();
+    return;
+  }
+  
+  if (action === 'skip') {
+    batchSkipped++;
+    saveBatchProgress();
+    moveToNextTag();
+    return;
+  }
+  
+  // Find original tag and update
+  const originalTag = tags.find(t => t.id === tag.id);
+  if (!originalTag) return;
+  
+  const oldValue = originalTag.reading_value;
+  originalTag.reading_value = parseFloat(rv);
+  
+  // Auto calculate tx_condition based on reading vs MAX
+  const newStatus = parseFloat(rv) > originalTag.max_limit ? 'Critical' : parseFloat(rv) >= originalTag.max_limit*0.9 ? 'Warning' : 'Normal';
+  originalTag.tx_condition = newStatus;
+  originalTag.date_checked = new Date().toISOString().slice(0,16).replace('T',' '); // Auto-set current datetime
+  originalTag.notes = document.getElementById('batchNotes').value;
+  originalTag.status = calcStatus(originalTag);
+  
+  // Update batch tag
+  tag.reading_value = originalTag.reading_value;
+  tag.status = originalTag.status;
+  tag.tx_condition = originalTag.tx_condition;
+  tag.date_checked = originalTag.date_checked;
+  tag.notes = originalTag.notes;
+  
+  batchCompleted++;
+  saveState();
+  saveBatchProgress();
+  
+  // Add audit
+  addAudit('UPDATE', 'pdmesd_tags', tag.tag_dcs, {
+    old: oldValue,
+    new: originalTag.reading_value,
+    status: originalTag.status
+  });
+  
+  moveToNextTag();
+  showToast('success', `✓ ${tag.tag_dcs}: ${fmtNum(rv)} ${tag.unit}`);
+}
+
+function moveToNextTag() {
+  batchCurrentIndex++;
+  if (batchCurrentIndex >= batchTags.length) {
+    batchCurrentIndex = batchTags.length - 1;
+  }
+  updateBatchProgress();
+  showCurrentBatchTag();
+  document.getElementById('batchReadingValue').focus();
+  
+  // Auto-scroll
+  document.getElementById('sec-batchinput').scrollIntoView({ behavior: 'smooth' });
+}
+
+function batchPrevTag() {
+  if (batchCurrentIndex > 0) {
+    batchCurrentIndex--;
+    showCurrentBatchTag();
+    document.getElementById('batchReadingValue').focus();
+  } else {
+    showToast('info', 'Sudah di TAG pertama!');
+  }
+}
+
+function jumpToBatchTag() {
+  const jumpTo = parseInt(document.getElementById('batchJumpTo').value);
+  if (!jumpTo || jumpTo < 1 || jumpTo > batchTags.length) {
+    showToast('warning', `Masukkan nomor 1-${batchTags.length}`);
+    return;
+  }
+  batchCurrentIndex = jumpTo - 1;
+  updateBatchProgress();
+  showCurrentBatchTag();
+  document.getElementById('batchReadingValue').focus();
+  showToast('info', `Melompat ke TAG #${jumpTo}`);
+}
+
+function updateBatchList() {
+  // Filter and refresh batch list
+  const ioFilter = document.getElementById('batchFilterIO').value;
+  const statusFilter = document.getElementById('batchFilterStatus').value;
+  
+  batchTags = tags.map((t, i) => ({...t, originalIndex: i}));
+  
+  if (ioFilter) {
+    batchTags = batchTags.filter(t => t.io_loc === ioFilter);
+  }
+  if (statusFilter) {
+    if (statusFilter === 'empty') {
+      batchTags = batchTags.filter(t => t.reading_value === null || t.reading_value === undefined || t.reading_value === '');
+    } else if (statusFilter === 'filled') {
+      batchTags = batchTags.filter(t => t.reading_value !== null && t.reading_value !== undefined && t.reading_value !== '');
+    } else {
+      batchTags = batchTags.filter(t => t.status === statusFilter);
+    }
+  }
+  
+  batchCurrentIndex = 0;
+  updateBatchProgress();
+  showCurrentBatchTag();
+  showToast('info', `Menampilkan ${batchTags.length} TAG`);
+}
+
+// Keyboard shortcuts for batch input
+document.addEventListener('keydown', e => {
+  // Only in batch input page
+  if (!document.getElementById('sec-batchinput')?.classList.contains('active')) return;
+  if (document.getElementById('loginPage').style.display !== 'none') return;
+  
+  // Ignore if typing in input fields
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    // Allow Escape in input to skip
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      saveBatchReading('skip');
+    }
+    return;
+  }
+  
+  if (e.key === 'Enter' && document.activeElement.id === 'batchReadingValue') {
+    e.preventDefault();
+    saveBatchReading('next');
+  }
+  if (e.key === 'Escape') {
+    saveBatchReading('skip');
+  }
+  // V = Speak current tag
+  if (e.key === 'v' || e.key === 'V') {
+    speakCurrentTag();
+  }
+  // M = Toggle microphone
+  if (e.key === 'm' || e.key === 'M') {
+    toggleVoiceInput();
+  }
+});
+
+// Live status preview on input
+document.addEventListener('input', e => {
+  if (e.target.id === 'batchReadingValue') {
+    updateBatchStatusPreview();
+  }
+});
+
+// ===== INIT =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') doLogin();
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('#tagSearch') && !e.target.closest('#tagSuggestions')) {
+    const s = document.getElementById('tagSuggestions');
+    if (s) s.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
