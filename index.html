@@ -1846,6 +1846,8 @@ function initBatchInput() {
   }
   updateBatchProgress();
   showCurrentBatchTag();
+  // Auto-speak will happen after short delay
+  setTimeout(() => speakCurrentTag(), 500);
 }
 
 function initFreshBatch() {
@@ -1870,8 +1872,7 @@ function startBatchInput() {
   initFreshBatch();
   updateBatchProgress();
   showCurrentBatchTag();
-  document.getElementById('batchReadingValue').focus();
-  showToast('info', 'Input batch dimulai dari TAG pertama!');
+  // Auto-speak will happen in showCurrentBatchTag after short delay
 }
 
 function resetBatchInput() {
@@ -2058,8 +2059,33 @@ function moveToNextTag() {
     batchCurrentIndex = batchTags.length - 1;
   }
   updateBatchProgress();
-  showCurrentBatchTag();
-  document.getElementById('batchReadingValue').focus();
+  // Show next tag but delay the TTS
+  const inputEl = document.getElementById('batchReadingValue');
+  if (inputEl) inputEl.value = '';
+  
+  // Update UI first
+  document.getElementById('batchCurrentIndex').textContent = '#' + (batchCurrentIndex + 1);
+  const tag = batchTags[batchCurrentIndex];
+  if (tag) {
+    document.getElementById('batchTagDcs').textContent = tag.tag_dcs;
+    document.getElementById('batchTagService').textContent = tag.service || '-';
+    document.getElementById('batchTagIoLoc').innerHTML = tag.io_loc === 'ESD' ? '<span class="badge bg-danger">ESD</span>' : '<span class="badge bg-primary">DCS</span>';
+    document.getElementById('batchTagMax').textContent = fmtNum(tag.max_limit) + ' ' + tag.unit;
+    document.getElementById('batchReadingUnit').textContent = tag.unit;
+    document.getElementById('batchStatusPreview').innerHTML = '';
+  }
+  
+  // Update progress bar
+  const total = batchTags.length;
+  const percent = total > 0 ? Math.round((batchCompleted / total) * 100) : 0;
+  document.getElementById('batchProgressBar').style.width = `${percent}%`;
+  document.getElementById('batchProgressText').textContent = `${batchCompleted}/${total}`;
+  
+  // Focus and speak next tag after delay
+  setTimeout(() => {
+    if (inputEl) inputEl.focus();
+    speakCurrentTag();
+  }, 300);
   
   // Auto-scroll
   document.getElementById('sec-batchinput').scrollIntoView({ behavior: 'smooth' });
