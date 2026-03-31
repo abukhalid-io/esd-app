@@ -756,6 +756,32 @@
             <div id="importResult"></div>
           </div>
         </div>
+
+        <!-- Google Sheets Sync -->
+        <div class="col-lg-6">
+          <div class="table-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-cloud text-danger me-2"></i>Google Sheets Sync</h6>
+            
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Google Sheets URL</label>
+              <input type="text" id="googleSheetUrl" class="form-control form-control-sm" 
+                     placeholder="https://script.google.com/..." 
+                     onchange="saveGoogleSheetUrl()">
+              <small class="text-muted">Isi dengan Web App URL dari Apps Script</small>
+            </div>
+            
+            <div class="list-group gap-2">
+              <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 border rounded p-3" onclick="syncToGoogleSheets()">
+                <i class="bi bi-upload text-danger fs-4"></i>
+                <div><div class="fw-semibold">Simpan ke Google Sheets</div><div class="small text-muted">Upload semua data ke sheet</div></div>
+              </button>
+              <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 border rounded p-3" onclick="loadFromGoogleSheets()">
+                <i class="bi bi-download text-primary fs-4"></i>
+                <div><div class="fw-semibold">Ambil dari Google Sheets</div><div class="small text-muted">Download data dari sheet</div></div>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1362,6 +1388,110 @@ function exportSummary() {
   XLSX.utils.book_append_sheet(wb, ws, 'Summary');
   XLSX.writeFile(wb, 'PDMESD_Summary_' + new Date().toISOString().slice(0,10) + '.xlsx');
   showToast('success','Summary report berhasil di-export!');
+}
+
+// ===== GOOGLE SHEETS SYNC =====
+let GOOGLE_SHEET_URL = localStorage.getItem('pdmesd_google_sheet_url') || '';
+
+function saveGoogleSheetUrl() {
+  const urlInput = document.getElementById('googleSheetUrl').value.trim();
+  if (urlInput) {
+    GOOGLE_SHEET_URL = urlInput;
+    localStorage.setItem('pdmesd_google_sheet_url', urlInput);
+    showToast('success', '✅ URL Google Sheets disimpan!');
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  if (GOOGLE_SHEET_URL) {
+    document.getElementById('googleSheetUrl').value = GOOGLE_SHEET_URL;
+  }
+});
+
+function syncToGoogleSheets() {
+  if (!GOOGLE_SHEET_URL) {
+    showToast('warning', 'Belum ada Google Sheets URL. Hubungi admin untuk setup.');
+    return;
+  }
+  
+  // Prepare data for Google Sheets
+  const exportData = getExportData(tags);
+  
+  showToast('info', 'Menyimpan ke Google Sheets...');
+  
+  fetch(GOOGLE_SHEET_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'append',
+      data: exportData
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      showToast('success', '✅ Data berhasil disimpan ke Google Sheets!');
+      addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
+    } else {
+      throw new Error('Server error');
+    }
+  })
+  .catch(error => {
+    console.error('Sync error:', error);
+    showToast('danger', '❌ Gagal sync ke Google Sheets. Cek koneksi dan URL.');
+  });
+}
+
+function loadFromGoogleSheets() {
+  if (!GOOGLE_SHEET_URL) {
+    showToast('warning', 'Belum ada Google Sheets URL. Hubungi admin untuk setup.');
+    return;
+  }
+  
+  if (!confirm('Data di aplikasi akan digantikan dengan data dari Google Sheets. Lanjutkan?')) {
+    return;
+  }
+  
+  showToast('info', 'Mengambil data dari Google Sheets...');
+  
+  fetch(GOOGLE_SHEET_URL + '?action=read', {
+    method: 'GET',
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data && data.length > 0) {
+      // Map Google Sheets data back to app format
+      tags = data.map(row => ({
+        id: String(row['No'] || row.id || ''),
+        tag_no: row['TAG No.'] || row.tag_no || '',
+        tag_dcs: row['TAG DCS'] || row.tag_dcs || '',
+        service: row['Service'] || row.service || '',
+        io_loc: row['I/O Loc'] || row.io_loc || '',
+        io_type: row['I/O Type'] || row.io_type || '',
+        max_limit: parseFloat(row['MAX Limit']) || row.max_limit || 0,
+        unit: row['Unit'] || row.unit || '',
+        reading_value: row['Reading Value'] !== '' ? parseFloat(row['Reading Value']) : null,
+        status: row['Status'] || row.status || 'Empty',
+        tx_condition: row['Tx Condition'] || row.tx_condition || '',
+        date_checked: row['Date Checked'] || row.date_checked || '',
+        notes: row['Notes'] || row.notes || ''
+      }));
+      
+      saveState();
+      updateDashboard();
+      applyFilters();
+      showToast('success', `✅ ${tags.length} TAG dimuat dari Google Sheets!`);
+      addAudit('SYNC', 'google_sheets', 'import', {count: tags.length});
+    } else {
+      showToast('warning', 'Tidak ada data di Google Sheets.');
+    }
+  })
+  .catch(error => {
+    console.error('Load error:', error);
+    showToast('danger', '❌ Gagal mengambil data. Cek koneksi dan URL.');
+  });
 }
 
 function downloadTemplate() {
