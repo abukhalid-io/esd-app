@@ -1391,7 +1391,7 @@ function exportSummary() {
 }
 
 // ===== GOOGLE SHEETS SYNC =====
-let GOOGLE_SHEET_URL = localStorage.getItem('pdmesd_google_sheet_url') || '';
+let GOOGLE_SHEET_URL = localStorage.getItem('pdmesd_google_sheet_url') || 'https://script.google.com/macros/s/AKfycbzF5o7REg7g3VI3F924bOUOnupeqkEtYU8Y4pvDdYOhQPkNT_pU5oWWOTjvjWQPz7E9/exec';
 
 function saveGoogleSheetUrl() {
   const urlInput = document.getElementById('googleSheetUrl').value.trim();
