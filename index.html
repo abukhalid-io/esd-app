@@ -613,7 +613,10 @@
             <div id="batchReadingUnit" class="text-center text-muted mb-3">-</div>
             
             <!-- Status Preview -->
-            <div id="batchStatusPreview" class="batch-status-preview text-center mb-3"></div>
+            <div id="batchStatusPreview" class="batch-status-preview text-center mb-2"></div>
+            
+            <!-- Notes (hidden, optional) -->
+            <input type="hidden" id="batchNotes" value="">
           </div>
 
           <!-- Action Buttons -->
@@ -1800,8 +1803,13 @@ function speakCurrentTag() {
       };
       
       utterance.onerror = (e) => {
+        // Ignore "interrupted" errors - happens when user clicks while speaking
+        if (e.error === 'interrupted' || e.error === 'canceled') {
+          console.log('TTS interrupted (user clicked while speaking)');
+          return;
+        }
         console.error('TTS error:', e);
-        showToast('danger', 'Gagal membaca TAG: ' + e.error);
+        // Don't show toast for TTS errors to avoid disturbing user
       };
       
       window.speechSynthesis.speak(utterance);
@@ -2028,7 +2036,9 @@ function saveBatchReading(action) {
   const newStatus = parseFloat(rv) > originalTag.max_limit ? 'Critical' : parseFloat(rv) >= originalTag.max_limit*0.9 ? 'Warning' : 'Normal';
   originalTag.tx_condition = newStatus;
   originalTag.date_checked = new Date().toISOString().slice(0,16).replace('T',' '); // Auto-set current datetime
-  originalTag.notes = document.getElementById('batchNotes').value;
+  // Get notes safely
+  const notesEl = document.getElementById('batchNotes');
+  originalTag.notes = notesEl ? notesEl.value : '';
   originalTag.status = calcStatus(originalTag);
   
   // Update batch tag
