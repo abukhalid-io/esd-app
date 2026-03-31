@@ -993,31 +993,6 @@ async function doLogin() { // Make it async
   showToast('success', `Selamat datang, ${user.name}!`);
 }
 
-async function doLogin() { // Make it async
-  if (loginAttempts >= 5) { showAlert('loginAlert','danger','Terlalu banyak percobaan. Coba lagi nanti.'); return; }
-  const username = document.getElementById('loginUsername').value.trim();
-  const pw = document.getElementById('loginPassword').value;
-  const user = USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === pw);
-  if (!user) {
-    loginAttempts++;
-    showAlert('loginAlert','danger',`Username/password salah. (${5-loginAttempts} percobaan tersisa)`);
-    return;
-  }
-  loginAttempts = 0;
-  currentUser = user;
-  document.getElementById('userDisplay').textContent = user.name;
-  document.getElementById('userEmail').textContent = user.username + ' (' + user.role + ')';
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('appPage').style.display = 'block';
-  await loadState(); // Await the async loadState
-  updateDashboard();
-  populateFilters();
-  applyFilters();
-  renderAudit();
-  addAudit('LOGIN', 'system', user.username, {});
-  showToast('success', `Selamat datang, ${user.name}!`);
-}
-
 function doLogout() {
   addAudit('LOGOUT', 'system', currentUser?.username, {});
   saveState();
