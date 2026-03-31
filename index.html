@@ -515,7 +515,10 @@
             <thead>
               <tr>
                 <th style="width:40px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                <th data-label="No" onclick="sortBy('id')" style="cursor:pointer">No <i class="bi bi-arrow-down-up"></i></th>
                 <th data-label="TAG DCS" onclick="sortBy('tag_dcs')" style="cursor:pointer">TAG DCS <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="Service" onclick="sortBy('service')" style="cursor:pointer">Service <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="I/O">I/O</th>
                 <th data-label="MAX" onclick="sortBy('max_limit')" style="cursor:pointer">MAX <i class="bi bi-arrow-down-up"></i></th>
                 <th data-label="Reading" onclick="sortBy('reading_value')" style="cursor:pointer">Reading <i class="bi bi-arrow-down-up"></i></th>
                 <th data-label="Status">Status</th>
@@ -1206,7 +1209,10 @@ function goPage(p) {
     const pct = t.reading_value !== null && t.reading_value !== undefined && t.reading_value !== '' ? Math.min((parseFloat(t.reading_value)/parseFloat(t.max_limit)*100),200).toFixed(1) : null;
     return `<tr>
       <td><input type="checkbox" class="row-check" data-id="${t.id}"></td>
+      <td data-label="No" class="text-muted small">${t.id}</td>
       <td data-label="TAG DCS"><code class="text-primary fw-bold">${t.tag_dcs}</code></td>
+      <td data-label="Service" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.service}">${t.service}</td>
+      <td data-label="I/O"><span class="badge ${t.io_loc==='ESD'?'bg-danger':'bg-primary'} bg-opacity-75">${t.io_loc}</span></td>
       <td data-label="MAX" class="text-end">${fmtNum(t.max_limit)} <small class="text-muted">${t.unit}</small></td>
       <td data-label="Reading" class="text-end fw-bold ${t.status==='Critical'?'text-danger':t.status==='Warning'?'text-warning':''}">
         ${t.reading_value !== null && t.reading_value !== '' ? fmtNum(t.reading_value) : '<span class="text-muted">-</span>'}
@@ -1218,7 +1224,7 @@ function goPage(p) {
         <button class="btn btn-sm btn-outline-info py-0 px-2 ms-1" onclick="viewTag('${t.id}')" title="Detail"><i class="bi bi-eye"></i></button>
       </td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-search me-2"></i>Tidak ada data</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-search me-2"></i>Tidak ada data</td></tr>';
 
   document.getElementById('tableInfo').textContent = total > 0 ? `Menampilkan ${start+1}-${end} dari ${total} TAG` : 'Tidak ada data';
   document.getElementById('paginationInfo').textContent = `Halaman ${p} dari ${pages}`;
