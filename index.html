@@ -182,7 +182,46 @@
     .topbar { padding:12px 16px; }
     .table-toolbar { padding:12px 14px; }
     .filter-bar { padding:14px 16px; }
+    
+    /* Game Style Batch Input - Mobile Optimized */
+    .batch-game-header { padding: 12px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .batch-game-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .batch-tag-display { padding: 20px 0; }
+    .batch-tag-number { font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 2px; }
+    .batch-tag-name { font-size: 32px; font-weight: 800; color: var(--primary); margin: 8px 0; }
+    .batch-tag-service { font-size: 14px; color: #495057; }
+    .batch-tag-io .badge { font-size: 12px; padding: 6px 12px; }
+    .batch-max-display { background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); padding: 12px; border-radius: 12px; margin: 16px 0; }
+    .batch-tag-max { font-size: 24px; font-weight: 700; color: #dc3545; }
+    .batch-input-area { margin: 20px 0; }
+    .batch-status-preview { min-height: 40px; }
+    .batch-actions { margin-top: 20px; }
+    .batch-actions .btn { padding: 14px; font-size: 16px; font-weight: 600; border-radius: 12px; }
+    .batch-stats { padding: 12px; background: #f8f9fa; border-radius: 12px; }
+    .batch-stats small { display: block; font-size: 11px; margin-top: 4px; }
+    .batch-filters { background: #f8f9fa; }
+    #batchReadingValue { font-size: 24px !important; padding: 16px; }
   }
+
+  /* Game Style Batch Input */
+  .batch-game-header { margin-bottom: 16px; }
+  .batch-game-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
+  .batch-tag-display { padding: 24px 0; }
+  .batch-tag-number { font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 3px; font-weight: 600; }
+  .batch-tag-name { font-size: 42px; font-weight: 800; color: var(--primary); margin: 12px 0; letter-spacing: 1px; }
+  .batch-tag-service { font-size: 14px; color: #495057; max-width: 300px; margin: 0 auto; }
+  .batch-tag-io .badge { font-size: 11px; padding: 6px 14px; border-radius: 20px; font-weight: 600; }
+  .batch-max-display { background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); padding: 16px; border-radius: 12px; margin: 20px auto; max-width: 300px; }
+  .batch-tag-max { font-size: 28px; font-weight: 700; color: #dc3545; }
+  .batch-input-area { margin: 24px 0; }
+  .batch-status-preview { min-height: 50px; display: flex; align-items: center; justify-content: center; }
+  .batch-status-preview .badge { font-size: 14px; padding: 8px 16px; }
+  .batch-actions { margin-top: 24px; }
+  .batch-actions .btn { padding: 16px; font-size: 18px; font-weight: 700; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .batch-stats { padding: 16px; background: #f8f9fa; border-radius: 12px; }
+  .batch-stats small { display: block; font-size: 12px; margin-top: 4px; font-weight: 600; }
+  .batch-filters { background: #f8f9fa; border-radius: 12px; }
+  .batch-filters select, .batch-filters input { border-radius: 8px; }
 
   /* Animation keyframes */
   @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -506,193 +545,169 @@
       </div>
     </div>
 
-    <!-- BATCH INPUT PAGE -->
+    <!-- BATCH INPUT PAGE - Mobile Game Style -->
     <div class="page-section" id="sec-batchinput">
-      <!-- Batch Progress Header -->
-      <div class="table-card p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Header with Progress -->
+      <div class="batch-game-header mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
           <div>
-            <h5 class="mb-1"><i class="bi bi-play-circle me-2 text-primary"></i>Input Reading Batch</h5>
-            <small class="text-muted">Input data reading secara berurutan dari TAG pertama</small>
+            <span class="badge bg-success" id="batchProgressText">0/0</span>
+            <small class="text-muted ms-2">Progress</small>
           </div>
-          <div class="text-end">
-            <button class="btn btn-outline-primary btn-sm me-2" onclick="resetBatchInput()">
-              <i class="bi bi-arrow-clockwise me-1"></i>Mulai Ulang
-            </button>
-            <button class="btn btn-success btn-sm" onclick="startBatchInput()">
-              <i class="bi bi-play me-1"></i>Mulai Input
+          <div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="resetBatchInput()">
+              <i class="bi bi-arrow-clockwise"></i>
             </button>
           </div>
         </div>
-        
-        <!-- Progress Bar -->
-        <div class="batch-progress-container">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="small fw-semibold">Progress Input</span>
-            <span class="small"><span id="batchProgressText">0/0</span> TAG</span>
-          </div>
-          <div class="progress" style="height: 24px;">
-            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="batchProgressBar" style="width: 0%">
-              <span id="batchProgressPercent" class="fw-bold">0%</span>
-            </div>
-          </div>
-          <div class="row mt-2 text-center">
-            <div class="col-3">
-              <small class="text-success"><i class="bi bi-check-circle me-1"></i><span id="batchCompleted">0</span> Selesai</small>
-            </div>
-            <div class="col-3">
-              <small class="text-warning"><i class="bi bi-clock me-1"></i><span id="batchSkipped">0</span> Dilewati</small>
-            </div>
-            <div class="col-3">
-              <small class="text-danger"><i class="bi bi-x-circle me-1"></i><span id="batchRemaining">0</span> Sisa</small>
-            </div>
-            <div class="col-3">
-              <small class="text-muted"><i class="bi bi-hourglass-split me-1"></i><span id="batchTotal">0</span> Total</small>
-            </div>
-          </div>
+        <div class="progress" style="height: 8px;">
+          <div class="progress-bar bg-success" id="batchProgressBar" style="width: 0%"></div>
         </div>
       </div>
 
-      <!-- Main Input Card -->
-      <div class="row g-3" id="batchInputArea">
-        <div class="col-lg-5">
-          <div class="table-card p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h6 class="fw-bold mb-0"><i class="bi bi-cpu me-2 text-primary"></i>TAG Saat Ini</h6>
-              <span class="badge bg-primary" id="batchCurrentIndex">0/0</span>
+      <!-- Main Game Area - Single Tag Focus -->
+      <div id="batchGameArea" class="batch-game-card">
+        <!-- Start Screen -->
+        <div id="batchStartScreen" class="text-center py-5">
+          <i class="bi bi-controller fs-1 text-primary d-block mb-3"></i>
+          <h5 class="fw-bold">Input Reading Game</h5>
+          <p class="text-muted small mb-3">Input nilai reading secara berurutan</p>
+          <div class="mb-4">
+            <span class="badge bg-secondary me-1">286 TAG</span>
+            <span class="badge bg-info">Auto Save</span>
+          </div>
+          <button class="btn btn-success btn-lg px-5" onclick="startBatchInput()">
+            <i class="bi bi-play-fill me-2"></i>Mulai
+          </button>
+        </div>
+
+        <!-- Gameplay Screen -->
+        <div id="batchGameplay" class="d-none">
+          <!-- Tag Display -->
+          <div class="batch-tag-display text-center mb-4">
+            <div class="batch-tag-number" id="batchCurrentIndex">#1</div>
+            <div class="batch-tag-name" id="batchTagDcs">-</div>
+            <div class="batch-tag-service" id="batchTagService">-</div>
+            <div class="batch-tag-io mt-2" id="batchTagIoLoc"></div>
+          </div>
+
+          <!-- MAX Display -->
+          <div class="batch-max-display text-center mb-3">
+            <div class="text-muted small">MAX Limit</div>
+            <div class="batch-tag-max" id="batchTagMax">-</div>
+          </div>
+
+          <!-- Input Area -->
+          <div class="batch-input-area">
+            <div class="input-group mb-2">
+              <button type="button" class="btn btn-outline-secondary" onclick="speakCurrentTag()" title="Dengarkan">
+                <i class="bi bi-volume-up"></i>
+              </button>
+              <input type="number" id="batchReadingValue" class="form-control form-control-lg text-center" 
+                     placeholder="0" min="0" step="any" oninput="calcBatchStatus()" 
+                     style="font-size: 1.5rem; font-weight: bold;">
+              <button type="button" class="btn btn-outline-danger" id="batchMicBtn" onclick="toggleVoiceInput()" title="Voice">
+                <i class="bi bi-mic"></i>
+              </button>
             </div>
+            <div id="batchReadingUnit" class="text-center text-muted mb-3">-</div>
             
-            <div id="batchCurrentTag" class="batch-tag-card p-3 mb-3" style="display:none;">
-              <div class="text-center mb-3">
-                <h3 class="text-primary fw-bold mb-1" id="batchTagDcs">-</h3>
-                <span class="badge bg-light text-dark" id="batchTagNo">-</span>
+            <!-- Status Preview -->
+            <div id="batchStatusPreview" class="batch-status-preview text-center mb-3"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="batch-actions">
+            <button class="btn btn-success btn-lg w-100 mb-2" onclick="saveBatchReading('next')">
+              <i class="bi bi-check-lg me-2"></i>SIMPAN
+            </button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-warning flex-fill" onclick="saveBatchReading('skip')">
+                <i class="bi bi-skip-forward me-1"></i>LEWATI
+              </button>
+              <button class="btn btn-outline-secondary flex-fill" onclick="batchPrevTag()">
+                <i class="bi bi-arrow-left me-1"></i>UNDO
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats Bar -->
+          <div class="batch-stats mt-3">
+            <div class="row text-center">
+              <div class="col-4">
+                <div class="text-success"><i class="bi bi-check-circle"></i></div>
+                <small id="batchCompleted">0</small>
               </div>
-              <div class="tag-detail-row"><label>Service</label><span id="batchTagService">-</span></div>
-              <div class="tag-detail-row"><label>I/O Location</label><span id="batchTagIoLoc">-</span></div>
-              <div class="tag-detail-row"><label>MAX Limit</label><span class="text-danger fw-bold" id="batchTagMax">-</span></div>
-              <div class="tag-detail-row"><label>Unit</label><span id="batchTagUnit">-</span></div>
-              <div class="tag-detail-row" id="batchCurrentReadingRow"><label>Reading Saat Ini</label><span id="batchCurrentReading">-</span></div>
-            </div>
-            
-            <div id="batchNoTag" class="text-center text-muted py-5">
-              <i class="bi bi-play-circle fs-1 d-block mb-3" style="opacity:.3"></i>
-              <p>Klik "Mulai Input" untuk memulai</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-lg-4">
-          <div class="table-card p-4">
-            <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square me-2 text-primary"></i>Input Reading</h6>
-            
-              <div id="batchInputForm" style="display:none;">
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Reading Value <span class="text-danger">*</span></label>
-                  <div class="input-group mb-2">
-                    <button type="button" class="btn btn-outline-secondary" onclick="speakCurrentTag()" title="Dengarkan TAG">
-                      <i class="bi bi-volume-up-fill"></i>
-                    </button>
-                    <input type="number" id="batchReadingValue" class="form-control form-control-lg" placeholder="Masukkan nilai reading..." min="0" step="any" oninput="calcBatchStatus()">
-                    <button type="button" class="btn btn-outline-danger" id="batchMicBtn" onclick="toggleVoiceInput()" title="Input dengan suara">
-                      <i class="bi bi-mic-fill"></i>
-                    </button>
-                    <span class="input-group-text fs-5" id="batchReadingUnit">-</span>
-                  </div>
-                  <div id="batchStatusPreview" class="text-center mb-3"></div>
-                </div>
-                
-                <div class="mb-3">
-                  <label class="form-label small fw-semibold">Catatan</label>
-                  <textarea id="batchNotes" class="form-control" rows="2" placeholder="Catatan opsional"></textarea>
-                </div>
+              <div class="col-4">
+                <div class="text-warning"><i class="bi bi-clock"></i></div>
+                <small id="batchSkipped">0</small>
               </div>
-            
-            <div id="batchFormEmpty" class="text-center text-muted py-3">
-              <i class="bi bi-arrow-right-circle fs-1 d-block mb-2" style="opacity:.3"></i>
-              <small>Pilih TAG terlebih dahulu</small>
+              <div class="col-4">
+                <div class="text-danger"><i class="bi bi-hourglass"></i></div>
+                <small id="batchRemaining">0</small>
+              </div>
             </div>
           </div>
         </div>
-        
-        <div class="col-lg-3">
-          <div class="table-card p-4">
-            <h6 class="fw-bold mb-3"><i class="bi bi-collection me-2 text-primary"></i>Navigasi</h6>
-            
-            <div class="d-grid gap-2 mb-3" id="batchNavButtons" style="display:none;">
-              <button class="btn btn-success btn-lg" onclick="saveBatchReading('next')">
-                <i class="bi bi-check-lg me-2"></i>Simpan & Next
-              </button>
-              <button class="btn btn-outline-primary" onclick="saveBatchReading('skip')">
-                <i class="bi bi-skip-forward me-2"></i>Lewati (Skip)
-              </button>
-              <button class="btn btn-outline-secondary" onclick="batchPrevTag()">
-                <i class="bi bi-arrow-left me-2"></i>Sebelumnya
-              </button>
+
+        <!-- Completion Screen -->
+        <div id="batchCompleteScreen" class="d-none text-center py-5">
+          <i class="bi bi-trophy-fill text-warning fs-1 d-block mb-3"></i>
+          <h4 class="text-success fw-bold">Selesai!</h4>
+          <p class="text-muted mb-4">Semua TAG sudah diproses</p>
+          <div class="batch-final-stats mb-4">
+            <div class="row">
+              <div class="col-6">
+                <div class="text-success">✅ Selesai</div>
+                <strong id="finalCompleted">0</strong>
+              </div>
+              <div class="col-6">
+                <div class="text-warning">⏭️ Dilewati</div>
+                <strong id="finalSkipped">0</strong>
+              </div>
             </div>
-            
-            <hr>
-            
-            <h6 class="fw-bold mb-2"><i class="bi bi-keyboard me-2 text-primary"></i>Shortcut</h6>
-            <div class="small text-muted">
-              <div class="mb-1"><kbd>Enter</kbd> → Simpan & Next</div>
-              <div class="mb-1"><kbd>Tab</kbd> → Field berikutnya</div>
-              <div class="mb-1"><kbd>Esc</kbd> → Skip TAG ini</div>
-              <div class="mb-1"><kbd>V</kbd> → Dengarkan TAG (TTS)</div>
-              <div><kbd>M</kbd> → Aktifkan Mic (Voice Input)</div>
-            </div>
+          </div>
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" onclick="resetBatchInput()">
+              <i class="bi bi-arrow-clockwise me-2"></i>Main Lagi
+            </button>
+            <button class="btn btn-outline-secondary" onclick="exportFiltered()">
+              <i class="bi bi-download me-2"></i>Export Data
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Quick Jump -->
-      <div class="table-card p-4 mt-4">
-        <h6 class="fw-bold mb-3"><i class="bi bi-list-ol me-2 text-primary"></i>Quick Jump ke TAG</h6>
-        <div class="row g-2">
-          <div class="col-md-4">
-            <select id="batchFilterIO" class="form-select form-select-sm" onchange="updateBatchList()">
-              <option value="">Semua I/O</option>
-              <option value="ESD">ESD</option>
-              <option value="DCS">DCS</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <select id="batchFilterStatus" class="form-select form-select-sm" onchange="updateBatchList()">
-              <option value="">Semua Status</option>
-              <option value="empty">Belum Diinput</option>
-              <option value="filled">Sudah Diinput</option>
-              <option value="Normal">Normal</option>
-              <option value="Warning">Warning</option>
-              <option value="Critical">Critical</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <input type="number" id="batchJumpTo" class="form-control form-control-sm" placeholder="Nomor TAG (1-286)" min="1">
+      <!-- Quick Jump (Collapsible) -->
+      <details class="mt-3">
+        <summary class="btn btn-outline-secondary btn-sm w-100">
+          <i class="bi bi-list-ol me-2"></i>Quick Jump / Filter
+        </summary>
+        <div class="batch-filters mt-2 p-3 bg-light rounded">
+          <div class="row g-2">
+            <div class="col-6">
+              <select id="batchFilterIO" class="form-select form-select-sm" onchange="updateBatchList()">
+                <option value="">Semua I/O</option>
+                <option value="ESD">ESD</option>
+                <option value="DCS">DCS</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <select id="batchFilterStatus" class="form-select form-select-sm" onchange="updateBatchList()">
+                <option value="">Semua Status</option>
+                <option value="empty">Belum Diinput</option>
+                <option value="filled">Sudah Diinput</option>
+              </select>
+            </div>
+            <div class="col-8">
+              <input type="number" id="batchJumpTo" class="form-control form-control-sm" placeholder="Nomor TAG">
+            </div>
+            <div class="col-4">
+              <button class="btn btn-primary btn-sm w-100" onclick="jumpToBatchTag()">Go</button>
+            </div>
           </div>
         </div>
-        <div class="d-flex gap-2 mt-3">
-          <button class="btn btn-primary btn-sm" onclick="jumpToBatchTag()">
-            <i class="bi bi-arrow-right me-1"></i>Jump
-          </button>
-          <button class="btn btn-outline-secondary btn-sm" onclick="updateBatchList()">
-            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
-          </button>
-        </div>
-      </div>
-
-      <!-- Completion Message -->
-      <div id="batchCompleteMessage" class="table-card p-5 mt-4 text-center" style="display:none;">
-        <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
-        <h4 class="text-success mb-2">Input Batch Selesai!</h4>
-        <p class="text-muted mb-4">Semua TAG telah diproses. Data telah disimpan ke localStorage.</p>
-        <div class="d-flex justify-content-center gap-3">
-          <button class="btn btn-outline-primary" onclick="resetBatchInput()">
-            <i class="bi bi-arrow-clockwise me-2"></i>Input Ulang
-          </button>
-          <button class="btn btn-primary" onclick="exportFiltered()">
-            <i class="bi bi-download me-2"></i>Export Data
-          </button>
-        </div>
-      </div>
+      </details>
     </div>
 
     <!-- EXPORT/IMPORT PAGE -->
@@ -1840,32 +1855,40 @@ function updateBatchProgress() {
   const remaining = total - batchCompleted - batchSkipped;
   const percent = total > 0 ? Math.round((batchCompleted / total) * 100) : 0;
   
+  // Update progress display
   document.getElementById('batchProgressText').textContent = `${batchCompleted}/${total}`;
-  document.getElementById('batchProgressPercent').textContent = `${percent}%`;
-  document.getElementById('batchProgressBar').style.width = `${percent}%`;
+  const progressBar = document.getElementById('batchProgressBar');
+  if (progressBar) progressBar.style.width = `${percent}%`;
   document.getElementById('batchCompleted').textContent = batchCompleted;
   document.getElementById('batchSkipped').textContent = batchSkipped;
   document.getElementById('batchRemaining').textContent = remaining;
-  document.getElementById('batchTotal').textContent = total;
-  document.getElementById('batchCurrentIndex').textContent = `${batchCurrentIndex + 1}/${total}`;
   
-  // Check completion
+  // Update current index display
+  const currentIndexEl = document.getElementById('batchCurrentIndex');
+  if (currentIndexEl && batchTags.length > 0) {
+    currentIndexEl.textContent = '#' + (batchCurrentIndex + 1);
+  }
+  
+  // Check completion - show completion screen
   if (remaining === 0 && total > 0) {
-    document.getElementById('batchInputArea').style.display = 'none';
-    document.getElementById('batchCompleteMessage').style.display = 'block';
-  } else {
-    document.getElementById('batchInputArea').style.display = 'flex';
-    document.getElementById('batchCompleteMessage').style.display = 'none';
+    document.getElementById('batchStartScreen').classList.add('d-none');
+    document.getElementById('batchGameplay').classList.add('d-none');
+    document.getElementById('batchCompleteScreen').classList.remove('d-none');
+    document.getElementById('finalCompleted').textContent = batchCompleted;
+    document.getElementById('finalSkipped').textContent = batchSkipped;
+  } else if (total === 0) {
+    document.getElementById('batchStartScreen').classList.remove('d-none');
+    document.getElementById('batchGameplay').classList.add('d-none');
+    document.getElementById('batchCompleteScreen').classList.add('d-none');
   }
 }
 
 function showCurrentBatchTag() {
+  // Handle empty state
   if (batchTags.length === 0) {
-    document.getElementById('batchCurrentTag').style.display = 'none';
-    document.getElementById('batchNoTag').style.display = 'block';
-    document.getElementById('batchInputForm').style.display = 'none';
-    document.getElementById('batchFormEmpty').style.display = 'block';
-    document.getElementById('batchNavButtons').style.display = 'none';
+    document.getElementById('batchStartScreen').classList.remove('d-none');
+    document.getElementById('batchGameplay').classList.add('d-none');
+    document.getElementById('batchCompleteScreen').classList.add('d-none');
     return;
   }
   
@@ -1875,26 +1898,20 @@ function showCurrentBatchTag() {
     return;
   }
   
-  document.getElementById('batchNoTag').style.display = 'none';
-  document.getElementById('batchCurrentTag').style.display = 'block';
-  document.getElementById('batchInputForm').style.display = 'block';
-  document.getElementById('batchFormEmpty').style.display = 'none';
-  document.getElementById('batchNavButtons').style.display = 'block';
+  // Show gameplay screen
+  document.getElementById('batchStartScreen').classList.add('d-none');
+  document.getElementById('batchGameplay').classList.remove('d-none');
+  document.getElementById('batchCompleteScreen').classList.add('d-none');
   
-  // Fill tag details
+  // Fill tag details - use new game-style IDs
+  document.getElementById('batchCurrentIndex').textContent = '#' + (batchCurrentIndex + 1);
   document.getElementById('batchTagDcs').textContent = tag.tag_dcs;
-  document.getElementById('batchTagNo').textContent = tag.tag_no;
   document.getElementById('batchTagService').textContent = tag.service || '-';
   document.getElementById('batchTagIoLoc').innerHTML = tag.io_loc === 'ESD' ? '<span class="badge bg-danger">ESD</span>' : '<span class="badge bg-primary">DCS</span>';
   document.getElementById('batchTagMax').textContent = fmtNum(tag.max_limit) + ' ' + tag.unit;
   document.getElementById('batchReadingUnit').textContent = tag.unit;
   
-  // Current reading
-  const currentReading = tag.reading_value !== null && tag.reading_value !== undefined ? fmtNum(tag.reading_value) : '-';
-  const currentStatus = tag.reading_value !== null ? statusBadge(tag.status) : '';
-  document.getElementById('batchCurrentReading').innerHTML = currentReading !== '-' ? `${currentReading} ${currentStatus}` : '<span class="text-muted">Belum diinput</span>';
-  
-  // Reset form
+  // Reset input
   document.getElementById('batchReadingValue').value = '';
   document.getElementById('batchNotes').value = '';
   document.getElementById('batchStatusPreview').innerHTML = '';
@@ -1905,9 +1922,15 @@ function showCurrentBatchTag() {
     updateBatchStatusPreview();
   }
   
-  document.getElementById('batchCurrentIndex').textContent = `${batchCurrentIndex + 1}/${batchTags.length}`;
+  // Update progress text
+  document.getElementById('batchProgressText').textContent = `${batchCurrentIndex + 1}/${batchTags.length}`;
   
-  // Auto-speak current tag when showing
+  // Focus on input
+  setTimeout(() => {
+    document.getElementById('batchReadingValue').focus();
+  }, 100);
+  
+  // Auto-speak current tag
   speakCurrentTag();
 }
 
