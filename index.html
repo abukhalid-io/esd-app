@@ -1736,26 +1736,59 @@ function speakCurrentTag() {
       
       // Get available voices
       const voices = window.speechSynthesis.getVoices();
+      console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
       
-      // Try to find Indonesian voice first, then English, then any
+      // Priority: Indonesian Male > English Male > Any Male > Any
+      // Keywords for male voices: David, Mark, Andika, male
       let selectedVoice = null;
       
-      // Priority: Indonesian > English US > Any
-      selectedVoice = voices.find(v => v.lang.includes('id')) || 
-                      voices.find(v => v.lang.includes('en-US')) ||
-                      voices.find(v => v.lang.includes('en')) ||
-                      voices[0];
+      // Try to find a male voice (prefer Indonesian then English)
+      const maleKeywords = ['david', 'mark', 'andika', 'male'];
+      
+      // First try: Indonesian male
+      selectedVoice = voices.find(v => v.lang.includes('id') && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+      
+      // Second try: English US male
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.includes('en-US') && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+      }
+      
+      // Third try: Any English male
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.includes('en') && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+      }
+      
+      // Fourth try: Any male
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+      }
+      
+      // Fifth try: Indonesian any
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.includes('id'));
+      }
+      
+      // Sixth: English US
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.includes('en-US'));
+      }
+      
+      // Last: first available
+      if (!selectedVoice && voices.length > 0) {
+        selectedVoice = voices[0];
+      }
       
       if (selectedVoice) {
         utterance.voice = selectedVoice;
         utterance.lang = selectedVoice.lang;
+        console.log('Using voice:', selectedVoice.name);
       } else {
-        utterance.lang = 'id-ID'; // Fallback to Indonesian
+        utterance.lang = 'en-US'; // Fallback
       }
       
       // Adjust settings for clearer output
       utterance.rate = 0.85;  // Slightly slower
-      utterance.pitch = 1;
+      utterance.pitch = 1;     // Normal pitch for male voice
       utterance.volume = 1.0;
       
       utterance.onstart = () => {
@@ -1912,13 +1945,15 @@ function showCurrentBatchTag() {
   document.getElementById('batchReadingUnit').textContent = tag.unit;
   
   // Reset input
-  document.getElementById('batchReadingValue').value = '';
-  document.getElementById('batchNotes').value = '';
-  document.getElementById('batchStatusPreview').innerHTML = '';
+  const readingInput = document.getElementById('batchReadingValue');
+  if (readingInput) readingInput.value = '';
+  
+  const statusPreview = document.getElementById('batchStatusPreview');
+  if (statusPreview) statusPreview.innerHTML = '';
   
   // Pre-fill if already has value
-  if (tag.reading_value !== null && tag.reading_value !== undefined) {
-    document.getElementById('batchReadingValue').value = tag.reading_value;
+  if (tag.reading_value !== null && tag.reading_value !== undefined && readingInput) {
+    readingInput.value = tag.reading_value;
     updateBatchStatusPreview();
   }
   
@@ -1927,7 +1962,8 @@ function showCurrentBatchTag() {
   
   // Focus on input
   setTimeout(() => {
-    document.getElementById('batchReadingValue').focus();
+    const inputEl = document.getElementById('batchReadingValue');
+    if (inputEl) inputEl.focus();
   }, 100);
   
   // Auto-speak current tag
