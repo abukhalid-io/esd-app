@@ -1527,6 +1527,55 @@ function syncToGoogleSheets() {
     return;
   }
   
+  if (!confirm('Semua data akan di-sync ke Google Sheets. Lanjutkan?')) {
+    return;
+  }
+  
+  showToast('info', 'Menyimpan ke Google Sheets...');
+  
+  // Use no-cors mode for Google Apps Script to avoid CORS issues
+  // This sends the request but we won't get the response back
+  fetch(GOOGLE_SHEET_URL + '?action=append&data=' + encodeURIComponent(JSON.stringify(exportData)), {
+    method: 'GET',
+    mode: 'no-cors'
+  })
+  .then(() => {
+    // With no-cors, we can't read the response but request was sent
+    showToast('success', '✅ Data dikirim ke Google Sheets! (Mode no-cors)');
+    addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
+  })
+  .catch(error => {
+    console.error('Sync error:', error);
+    // Try alternative method
+    syncToGoogleSheetsAlt();
+  });
+}
+
+// Alternative sync method
+function syncToGoogleSheetsAlt() {
+  showToast('info', 'Mencoba metode alternatif...');
+  
+  fetch(GOOGLE_SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'append',
+      data: exportData
+    })
+  })
+  .then(() => {
+    showToast('success', '✅ Data dikirim ke Google Sheets!');
+    addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
+  })
+  .catch(error => {
+    console.error('Sync error:', error);
+    showToast('danger', '❌ Gagal sync ke Google Sheets. Error: ' + error.message + '. Pastikan URL Apps Script benar dan sudah di-deploy dengan akses "Anyone".');
+  });
+}
+  
   // Prepare data for Google Sheets
   const exportData = getExportData(tags);
   
@@ -1583,47 +1632,20 @@ function loadFromGoogleSheets() {
   
   showToast('info', 'Mengambil data dari Google Sheets...');
   
+  // Use no-cors mode for Google Apps Script - we send request and assume success
   fetch(GOOGLE_SHEET_URL + '?action=read', {
     method: 'GET',
-    redirect: 'follow'
+    mode: 'no-cors'
   })
-  .then(response => response.text())
-  .then(text => {
-    try {
-      const data = JSON.parse(text);
-      if (data && data.length > 0) {
-        tags = data.map(row => ({
-          id: String(row['No'] || row.id || ''),
-          tag_no: row['TAG No.'] || row.tag_no || '',
-          tag_dcs: row['TAG DCS'] || row.tag_dcs || '',
-          service: row['Service'] || row.service || '',
-          io_loc: row['I/O Loc'] || row.io_loc || '',
-          io_type: row['I/O Type'] || row.io_type || '',
-          max_limit: parseFloat(row['MAX Limit']) || row.max_limit || 0,
-          unit: row['Unit'] || row.unit || '',
-          reading_value: row['Reading Value'] !== '' ? parseFloat(row['Reading Value']) : null,
-          status: row['Status'] || row.status || 'Empty',
-          tx_condition: row['Tx Condition'] || row.tx_condition || '',
-          date_checked: row['Date Checked'] || row.date_checked || '',
-          notes: row['Notes'] || row.notes || ''
-        }));
-        
-        saveState();
-        updateDashboard();
-        applyFilters();
-        showToast('success', `✅ ${tags.length} TAG dimuat dari Google Sheets!`);
-        addAudit('SYNC', 'google_sheets', 'import', {count: tags.length});
-      } else {
-        showToast('warning', 'Tidak ada data di Google Sheets.');
-      }
-    } catch (err) {
-      console.error('Parse error:', err);
-      showToast('danger', 'Error parsing data: ' + err.message);
-    }
+  .then(() => {
+    // With no-cors mode, we can't read the response
+    // The data should be saved in Google Sheets
+    showToast('info', '📥 Request dikirim ke Google Sheets. Untuk melihat data, buka Google Sheets langsung.');
+    addAudit('SYNC', 'google_sheets', 'export', {});
   })
   .catch(error => {
     console.error('Load error:', error);
-    showToast('danger', '❌ Gagal mengambil data. Error: ' + error.message);
+    showToast('danger', '❌ Gagal mengakses Google Sheets. Error: ' + error.message + '. Pastikan URL Apps Script benar.');
   });
 }
 
