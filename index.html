@@ -192,13 +192,31 @@
     .topbar .badge { font-size:10px; }
     .dropdown-toggle::after { display:none; }
     
-    /* Mobile Table - Card View - Compact */
+    /* Mobile Table - Card View - Side by Side */
     .data-table thead { display:none; }
     .data-table, .data-table tbody, .data-table tr, .data-table td { display:block; width:100%; }
     .data-table tbody tr { margin-bottom:10px; border:1px solid #e9ecef; border-radius:8px; padding:10px; background:#fff; }
-    .data-table tbody td { padding:6px 0; border:none; border-bottom:1px solid #f0f0f0; text-align:left; font-size:13px; }
-    .data-table tbody td::before { content:attr(data-label); font-weight:600; color:var(--primary); display:block; font-size:10px; text-transform:uppercase; margin-bottom:2px; }
-    .data-table tbody td:last-child { border-bottom:none; text-align:center; }
+    .data-table tbody td { 
+      display:flex; 
+      justify-content:space-between; 
+      align-items:center; 
+      padding:6px 0; 
+      border:none; 
+      border-bottom:1px solid #f0f0f0; 
+      text-align:left; 
+      font-size:13px; 
+    }
+    .data-table tbody td::before { 
+      content:attr(data-label) ": "; 
+      font-weight:600; 
+      color:var(--primary); 
+      font-size:11px; 
+      text-transform:uppercase; 
+    }
+    .data-table tbody td:last-child { 
+      border-bottom:none; 
+      justify-content:center; 
+    }
     .data-table tbody td:first-child { display:none; }
     .data-table .btn-sm { padding:4px 8px; font-size:11px; }
     .data-table code { font-size:12px; }
