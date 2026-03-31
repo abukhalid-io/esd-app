@@ -185,6 +185,16 @@
     .table-toolbar { padding:12px 14px; }
     .filter-bar { padding:14px 16px; }
     
+    /* Mobile Table - Card View */
+    .data-table thead { display:none; }
+    .data-table, .data-table tbody, .data-table tr, .data-table td { display:block; width:100%; }
+    .data-table tbody tr { margin-bottom:12px; border:1px solid #e9ecef; border-radius:8px; padding:12px; background:#fff; }
+    .data-table tbody td { padding:8px 0; border:none; border-bottom:1px solid #f0f0f0; text-align:left; }
+    .data-table tbody td::before { content:attr(data-label); font-weight:600; color:var(--primary); display:block; font-size:11px; text-transform:uppercase; margin-bottom:4px; }
+    .data-table tbody td:last-child { border-bottom:none; text-align:center; }
+    .data-table tbody td:first-child { display:none; }
+    .data-table .btn-sm { padding:6px 12px; font-size:12px; }
+    
     /* Close sidebar when clicking nav link on mobile */
     .sidebar .nav-link { padding:12px 16px; }
     .sidebar.mobile-open + .sidebar-overlay.show { display:block; }
@@ -474,18 +484,18 @@
             <thead>
               <tr>
                 <th style="width:40px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
-                <th onclick="sortBy('id')" style="cursor:pointer">No <i class="bi bi-arrow-down-up"></i></th>
-                <th onclick="sortBy('tag_no')" style="cursor:pointer">TAG No. <i class="bi bi-arrow-down-up"></i></th>
-                <th onclick="sortBy('tag_dcs')" style="cursor:pointer">TAG DCS <i class="bi bi-arrow-down-up"></i></th>
-                <th>SERVICE</th>
-                <th>I/O</th>
-                <th onclick="sortBy('max_limit')" style="cursor:pointer">MAX <i class="bi bi-arrow-down-up"></i></th>
-                <th>UNIT</th>
-                <th onclick="sortBy('reading_value')" style="cursor:pointer">Reading <i class="bi bi-arrow-down-up"></i></th>
-                <th>STATUS</th>
-                <th>Tx Cond</th>
-                <th>Date Checked</th>
-                <th>Aksi</th>
+                <th data-label="No" onclick="sortBy('id')" style="cursor:pointer">No <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="TAG No." onclick="sortBy('tag_no')" style="cursor:pointer">TAG No. <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="TAG DCS" onclick="sortBy('tag_dcs')" style="cursor:pointer">TAG DCS <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="Service">SERVICE</th>
+                <th data-label="I/O">I/O</th>
+                <th data-label="MAX" onclick="sortBy('max_limit')" style="cursor:pointer">MAX <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="Unit">UNIT</th>
+                <th data-label="Reading" onclick="sortBy('reading_value')" style="cursor:pointer">Reading <i class="bi bi-arrow-down-up"></i></th>
+                <th data-label="Status">STATUS</th>
+                <th data-label="Tx Cond">Tx Cond</th>
+                <th data-label="Tgl Check">Date Checked</th>
+                <th data-label="Aksi">Aksi</th>
               </tr>
             </thead>
             <tbody id="tagTableBody"></tbody>
@@ -1165,21 +1175,21 @@ function goPage(p) {
     const pct = t.reading_value !== null && t.reading_value !== undefined && t.reading_value !== '' ? Math.min((parseFloat(t.reading_value)/parseFloat(t.max_limit)*100),200).toFixed(1) : null;
     return `<tr>
       <td><input type="checkbox" class="row-check" data-id="${t.id}"></td>
-      <td class="text-muted small">${t.id}</td>
-      <td><code class="text-secondary">${t.tag_no}</code></td>
-      <td><code class="text-primary fw-bold">${t.tag_dcs}</code></td>
-      <td class="small" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.service}">${t.service}</td>
-      <td><span class="badge ${t.io_loc==='ESD'?'bg-danger':'bg-primary'} bg-opacity-75">${t.io_loc}</span></td>
-      <td class="text-end">${fmtNum(t.max_limit)}</td>
-      <td><span class="badge bg-light text-dark">${t.unit}</span></td>
-      <td class="text-end fw-bold ${t.status==='Critical'?'text-danger':t.status==='Warning'?'text-warning':''}">
+      <td data-label="No">${t.id}</td>
+      <td data-label="TAG No."><code class="text-secondary">${t.tag_no}</code></td>
+      <td data-label="TAG DCS"><code class="text-primary fw-bold">${t.tag_dcs}</code></td>
+      <td data-label="Service" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.service}">${t.service}</td>
+      <td data-label="I/O"><span class="badge ${t.io_loc==='ESD'?'bg-danger':'bg-primary'} bg-opacity-75">${t.io_loc}</span></td>
+      <td data-label="MAX" class="text-end">${fmtNum(t.max_limit)}</td>
+      <td data-label="Unit"><span class="badge bg-light text-dark">${t.unit}</span></td>
+      <td data-label="Reading" class="text-end fw-bold ${t.status==='Critical'?'text-danger':t.status==='Warning'?'text-warning':''}">
         ${t.reading_value !== null && t.reading_value !== '' ? fmtNum(t.reading_value) : '<span class="text-muted">-</span>'}
         ${pct ? `<div class="progress progress-mini mt-1" style="width:60px"><div class="progress-bar ${t.status==='Critical'?'bar-critical':t.status==='Warning'?'bar-warning':'bar-normal'}" style="width:${Math.min(pct,100)}%"></div></div>` : ''}
       </td>
-      <td>${statusBadge(t.status)}</td>
-      <td class="small">${t.tx_condition||'-'}</td>
-      <td class="small text-muted">${t.date_checked||'-'}</td>
-      <td>
+      <td data-label="Status">${statusBadge(t.status)}</td>
+      <td data-label="Tx Cond">${t.tx_condition||'-'}</td>
+      <td data-label="Tgl Check">${t.date_checked||'-'}</td>
+      <td data-label="Aksi">
         <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="openInputModal('${t.id}')" title="Input Reading"><i class="bi bi-pencil"></i></button>
         <button class="btn btn-sm btn-outline-info py-0 px-2 ms-1" onclick="viewTag('${t.id}')" title="Detail"><i class="bi bi-eye"></i></button>
       </td>
