@@ -329,7 +329,7 @@
     <div class="mb-3 d-flex justify-content-between align-items-center">
       <div class="form-check"><input type="checkbox" class="form-check-input" id="rememberMe"><label class="form-check-label" for="rememberMe">Ingat saya</label></div>
     </div>
-    <button class="btn btn-primary w-100 py-2 fw-semibold" id="loginBtn" onclick="doLogin()">
+    <button type="button" class="btn btn-primary w-100 py-2 fw-semibold" id="loginBtn" onclick="doLogin()">
       <i class="bi bi-box-arrow-in-right me-2"></i>Masuk ke Sistem
     </button>
   </div>
@@ -904,6 +904,25 @@
 <div id="toastArea"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  // Ensure Bootstrap is loaded
+  if (typeof bootstrap !== 'undefined') {
+    console.log('Bootstrap loaded successfully');
+  } else {
+    console.error('Bootstrap NOT loaded!');
+  }
+  
+  // Also load Bootstrap from fallback
+  if (typeof bootstrap === 'undefined') {
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js';
+    script.onload = function() { console.log('Bootstrap fallback loaded'); };
+    script.onerror = function() { console.error('Bootstrap fallback failed'); };
+    document.head.appendChild(script);
+  }
+});
+</script>
 <script>
 // ========== DATA ==========
 const USERS = [
@@ -1521,6 +1540,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Prepare data for Google Sheets
 function syncToGoogleSheets() {
   if (!GOOGLE_SHEET_URL) {
     showToast('warning', 'Belum ada Google Sheets URL. Hubungi admin untuk setup.');
@@ -1531,52 +1551,7 @@ function syncToGoogleSheets() {
     return;
   }
   
-  showToast('info', 'Menyimpan ke Google Sheets...');
-  
-  // Use no-cors mode for Google Apps Script to avoid CORS issues
-  // This sends the request but we won't get the response back
-  fetch(GOOGLE_SHEET_URL + '?action=append&data=' + encodeURIComponent(JSON.stringify(exportData)), {
-    method: 'GET',
-    mode: 'no-cors'
-  })
-  .then(() => {
-    // With no-cors, we can't read the response but request was sent
-    showToast('success', '✅ Data dikirim ke Google Sheets! (Mode no-cors)');
-    addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
-  })
-  .catch(error => {
-    console.error('Sync error:', error);
-    // Try alternative method
-    syncToGoogleSheetsAlt();
-  });
-}
-
-// Alternative sync method
-function syncToGoogleSheetsAlt() {
-  showToast('info', 'Mencoba metode alternatif...');
-  
-  fetch(GOOGLE_SHEET_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'text/plain;charset=utf-8',
-    },
-    body: JSON.stringify({
-      action: 'append',
-      data: exportData
-    })
-  })
-  .then(() => {
-    showToast('success', '✅ Data dikirim ke Google Sheets!');
-    addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
-  })
-  .catch(error => {
-    console.error('Sync error:', error);
-    showToast('danger', '❌ Gagal sync ke Google Sheets. Error: ' + error.message + '. Pastikan URL Apps Script benar dan sudah di-deploy dengan akses "Anyone".');
-  });
-}
-  
-  // Prepare data for Google Sheets
+  // Prepare data for Google Sheets - use original getExportData function
   const exportData = getExportData(tags);
   
   showToast('info', 'Menyimpan ke Google Sheets...');
@@ -1616,7 +1591,7 @@ function syncToGoogleSheetsAlt() {
   })
   .catch(error => {
     console.error('Sync error:', error);
-    showToast('danger', '❌ Gagal sync ke Google Sheets. Error: ' + error.message);
+    showToast('danger', '❌ Gagal sync ke Google Sheets. Error: ' + error.message + '. Pastikan URL Apps Script benar dan sudah di-deploy dengan akses "Anyone".');
   });
 }
 
@@ -1632,20 +1607,46 @@ function loadFromGoogleSheets() {
   
   showToast('info', 'Mengambil data dari Google Sheets...');
   
-  // Use no-cors mode for Google Apps Script - we send request and assume success
+  // Fetch data from Google Sheets (doGet)
   fetch(GOOGLE_SHEET_URL + '?action=read', {
-    method: 'GET',
-    mode: 'no-cors'
+    method: 'GET'
   })
-  .then(() => {
-    // With no-cors mode, we can't read the response
-    // The data should be saved in Google Sheets
-    showToast('info', '📥 Request dikirim ke Google Sheets. Untuk melihat data, buka Google Sheets langsung.');
-    addAudit('SYNC', 'google_sheets', 'export', {});
+  .then(response => response.text())
+  .then(text => {
+    console.log('Google Sheets response:', text);
+    try {
+      const data = JSON.parse(text);
+      if (Array.isArray(data) && data.length > 0) {
+        // Update local tags data
+        let updated = 0;
+        data.forEach(row => {
+          const tagDcs = row['TAG DCS'] || row['TAG DCS'];
+          const tag = tags.find(t => t.tag_dcs === tagDcs);
+          if (tag) {
+            tag.reading_value = row['Reading Value'] !== '' ? parseFloat(row['Reading Value']) : null;
+            tag.tx_condition = row['Tx Condition'] || row['Status'] || '';
+            tag.date_checked = row['Date Checked'] || '';
+            tag.notes = row['Notes'] || '';
+            tag.status = calcStatus(tag);
+            updated++;
+          }
+        });
+        saveState();
+        updateDashboard();
+        applyFilters();
+        showToast('success', `✅ Berhasil load ${updated} TAG dari Google Sheets!`);
+        addAudit('SYNC', 'google_sheets', 'load', {count: updated});
+      } else {
+        showToast('warning', '⚠️ Tidak ada data di Google Sheets');
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      showToast('danger', '❌ Gagal parse data dari Google Sheets. Error: ' + e.message);
+    }
   })
   .catch(error => {
     console.error('Load error:', error);
-    showToast('danger', '❌ Gagal mengakses Google Sheets. Error: ' + error.message + '. Pastikan URL Apps Script benar.');
+    showToast('danger', '❌ Gagal mengakses Google Sheets. Error: ' + error.message + '. Pastikan URL Apps Script benar dan sudah di-deploy dengan akses "Anyone".');
   });
 }
 
@@ -2533,6 +2534,9 @@ document.addEventListener('click', e => {
     if (s) s.style.display = 'none';
   }
 });
+
+// Mobile touch support for login button
+document.addEventListener('touchstart', function() {}, {passive: true});
 
 // Load saved credentials when page loads
 loadSavedCredentials();
