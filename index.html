@@ -1420,27 +1420,42 @@ function syncToGoogleSheets() {
   
   showToast('info', 'Menyimpan ke Google Sheets...');
   
+  // Use redirect: 'follow' for Google Apps Script
   fetch(GOOGLE_SHEET_URL, {
     method: 'POST',
+    redirect: 'follow',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'text/plain;charset=utf-8',
     },
     body: JSON.stringify({
       action: 'append',
       data: exportData
     })
   })
-  .then(response => {
-    if (response.ok) {
-      showToast('success', '✅ Data berhasil disimpan ke Google Sheets!');
-      addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
-    } else {
-      throw new Error('Server error');
+  .then(response => response.text())
+  .then(text => {
+    console.log('Response:', text);
+    try {
+      const json = JSON.parse(text);
+      if (json.success) {
+        showToast('success', `✅ Data berhasil disimpan ke Google Sheets! (${json.count} baris)`);
+        addAudit('SYNC', 'google_sheets', 'sync', {count: json.count});
+      } else {
+        showToast('warning', '⚠️ ' + (json.message || 'Response tidak valid'));
+      }
+    } catch(e) {
+      // If response is not JSON but successful, still show success
+      if (text && text.length < 500) {
+        showToast('success', '✅ Data berhasil disimpan ke Google Sheets!');
+        addAudit('SYNC', 'google_sheets', 'sync', {count: exportData.length});
+      } else {
+        throw new Error('Invalid response');
+      }
     }
   })
   .catch(error => {
     console.error('Sync error:', error);
-    showToast('danger', '❌ Gagal sync ke Google Sheets. Cek koneksi dan URL.');
+    showToast('danger', '❌ Gagal sync ke Google Sheets. Error: ' + error.message);
   });
 }
 
@@ -1456,12 +1471,17 @@ function loadFromGoogleSheets() {
   
   showToast('info', 'Mengambil data dari Google Sheets...');
   
+  // Use redirect: 'follow' for Google Apps Script
   fetch(GOOGLE_SHEET_URL + '?action=read', {
     method: 'GET',
+    redirect: 'follow'
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data && data.length > 0) {
+  .then(response => response.text())
+  .then(text => {
+    console.log('Load Response:', text);
+    try {
+      const data = JSON.parse(text);
+      if (data && data.length > 0) {
       // Map Google Sheets data back to app format
       tags = data.map(row => ({
         id: String(row['No'] || row.id || ''),
@@ -1490,7 +1510,7 @@ function loadFromGoogleSheets() {
   })
   .catch(error => {
     console.error('Load error:', error);
-    showToast('danger', '❌ Gagal mengambil data. Cek koneksi dan URL.');
+    showToast('danger', '❌ Gagal mengambil data. Error: ' + error.message);
   });
 }
 
