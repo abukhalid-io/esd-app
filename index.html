@@ -174,14 +174,20 @@
   .bar-critical { background-color:var(--danger); }
 
   @media(max-width:768px) {
-    .sidebar { width:0; transform:translateX(-100%); }
+    .sidebar { width:0; transform:translateX(-100%); position:fixed; height:100vh; z-index:1000; transition:transform 0.3s ease; }
     .sidebar.mobile-open { width:var(--sidebar-width); transform:translateX(0); }
+    .sidebar-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999; }
+    .sidebar-overlay.show { display:block; }
     .main-content { margin-left:0; padding:16px; }
     .stat-number { font-size:26px; }
     .login-card { margin:16px; padding:30px; }
     .topbar { padding:12px 16px; }
     .table-toolbar { padding:12px 14px; }
     .filter-bar { padding:14px 16px; }
+    
+    /* Close sidebar when clicking nav link on mobile */
+    .sidebar .nav-link { padding:12px 16px; }
+    .sidebar.mobile-open + .sidebar-overlay.show { display:block; }
     
     /* Game Style Batch Input - Mobile Optimized */
     .batch-game-header { padding: 12px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -276,6 +282,9 @@
 
 <!-- APP PAGE -->
 <div id="appPage">
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -971,6 +980,14 @@ function showAlert(id, type, msg) {
 
 // ===== NAV =====
 function showPage(page) {
+  // Close mobile sidebar when navigating
+  if (window.innerWidth <= 768) {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebarOverlay');
+    s.classList.remove('mobile-open');
+    if (o) o.classList.remove('show');
+  }
+  
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
   document.getElementById('sec-'+page).classList.add('active');
@@ -986,8 +1003,16 @@ function showPage(page) {
 function toggleSidebar() {
   const s = document.getElementById('sidebar');
   const m = document.getElementById('mainContent');
-  s.classList.toggle('collapsed');
-  m.classList.toggle('expanded');
+  const o = document.getElementById('sidebarOverlay');
+  
+  // Check if mobile view
+  if (window.innerWidth <= 768) {
+    s.classList.toggle('mobile-open');
+    if (o) o.classList.toggle('show');
+  } else {
+    s.classList.toggle('collapsed');
+    m.classList.toggle('expanded');
+  }
 }
 
 // ===== CLOCK =====
