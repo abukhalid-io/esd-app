@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDM/ESD Monitoring System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1E3C72 0%, #2A5298 50%, #17A2B8 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      background: #fff;
+      padding: 50px;
+      border-radius: 20px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+      max-width: 500px;
+    }
+    .badge {
+      background: linear-gradient(135deg, #1E3C72, #2A5298);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      display: inline-block;
+    }
+    h1 {
+      color: #1E3C72;
+      margin: 24px 0 16px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    p {
+      color: #6c757d;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #1E3C72, #2A5298);
+      color: #fff;
+      padding: 16px 40px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(30,60,114,0.3);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(30,60,114,0.4);
+    }
+    .features {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      text-align: center;
+    }
+    .feature {
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+    .feature i {
+      font-size: 24px;
+      color: #2A5298;
+      margin-bottom: 8px;
+    }
+    .feature span {
+      display: block;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">
+      <i class="bi bi-cpu"></i> Industrial DCS/ESD
+    </div>
+    <h1>PDM/ESD Monitoring System</h1>
+    <p>Sistem Monitoring Tag Instrumentasi Plant untuk Process Data Management dan Emergency Shutdown System.</p>
+    <a href="docs/" class="btn">
+      <i class="bi bi-box-arrow-in-right"></i> Buka Aplikasi
+    </a>
+    <div class="features">
+      <div class="feature">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+      </div>
+      <div class="feature">
+        <i class="bi bi-tags"></i>
+        <span>Data TAG</span>
+      </div>
+      <div class="feature">
+        <i class="bi bi-file-earmark-excel"></i>
+        <span>Export/Import</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
