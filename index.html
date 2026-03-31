@@ -178,22 +178,30 @@
     .sidebar.mobile-open { width:var(--sidebar-width); transform:translateX(0); }
     .sidebar-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999; }
     .sidebar-overlay.show { display:block; }
-    .main-content { margin-left:0; padding:16px; }
+    .main-content { margin-left:0; padding:12px; }
     .stat-number { font-size:26px; }
-    .login-card { margin:16px; padding:30px; }
-    .topbar { padding:12px 16px; }
-    .table-toolbar { padding:12px 14px; }
-    .filter-bar { padding:14px 16px; }
+    .login-card { margin:12px; padding:24px; }
+    .topbar { padding:10px 12px; flex-wrap:wrap; gap:8px; }
+    .table-toolbar { padding:10px 12px; }
+    .filter-bar { padding:12px; }
+    .topbar-title { font-size:14px; }
     
-    /* Mobile Table - Card View */
+    /* Topbar compact on mobile */
+    .topbar .d-flex.gap-2 { gap:8px !important; }
+    .topbar .btn-sm { padding:4px 8px; font-size:11px; }
+    .topbar .badge { font-size:10px; }
+    .dropdown-toggle::after { display:none; }
+    
+    /* Mobile Table - Card View - Compact */
     .data-table thead { display:none; }
     .data-table, .data-table tbody, .data-table tr, .data-table td { display:block; width:100%; }
-    .data-table tbody tr { margin-bottom:12px; border:1px solid #e9ecef; border-radius:8px; padding:12px; background:#fff; }
-    .data-table tbody td { padding:8px 0; border:none; border-bottom:1px solid #f0f0f0; text-align:left; }
-    .data-table tbody td::before { content:attr(data-label); font-weight:600; color:var(--primary); display:block; font-size:11px; text-transform:uppercase; margin-bottom:4px; }
+    .data-table tbody tr { margin-bottom:10px; border:1px solid #e9ecef; border-radius:8px; padding:10px; background:#fff; }
+    .data-table tbody td { padding:6px 0; border:none; border-bottom:1px solid #f0f0f0; text-align:left; font-size:13px; }
+    .data-table tbody td::before { content:attr(data-label); font-weight:600; color:var(--primary); display:block; font-size:10px; text-transform:uppercase; margin-bottom:2px; }
     .data-table tbody td:last-child { border-bottom:none; text-align:center; }
     .data-table tbody td:first-child { display:none; }
-    .data-table .btn-sm { padding:6px 12px; font-size:12px; }
+    .data-table .btn-sm { padding:4px 8px; font-size:11px; }
+    .data-table code { font-size:12px; }
     
     /* Close sidebar when clicking nav link on mobile */
     .sidebar .nav-link { padding:12px 16px; }
@@ -323,9 +331,14 @@
         <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list fs-5"></i></button>
         <div class="topbar-title" id="pageTitle">Dashboard</div>
       </div>
-      <div class="d-flex align-items-center gap-3">
-        <span class="badge bg-success" id="shiftBadge">Shift Pagi</span>
-        <span id="currentDateTime" class="text-muted small"></span>
+      <div class="d-flex align-items-center gap-2">
+        <div class="text-end d-none d-md-block">
+          <div class="small fw-bold text-success" id="shiftBadge">Shift Pagi</div>
+          <div class="text-muted" style="font-size:11px" id="currentDateTime"></div>
+        </div>
+        <div class="d-md-none">
+          <span class="badge bg-success" id="shiftBadgeMobile">Shift Pagi</span>
+        </div>
         <div class="dropdown">
           <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle me-1"></i><span id="userDisplay">-</span>
@@ -484,17 +497,10 @@
             <thead>
               <tr>
                 <th style="width:40px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
-                <th data-label="No" onclick="sortBy('id')" style="cursor:pointer">No <i class="bi bi-arrow-down-up"></i></th>
-                <th data-label="TAG No." onclick="sortBy('tag_no')" style="cursor:pointer">TAG No. <i class="bi bi-arrow-down-up"></i></th>
                 <th data-label="TAG DCS" onclick="sortBy('tag_dcs')" style="cursor:pointer">TAG DCS <i class="bi bi-arrow-down-up"></i></th>
-                <th data-label="Service">SERVICE</th>
-                <th data-label="I/O">I/O</th>
                 <th data-label="MAX" onclick="sortBy('max_limit')" style="cursor:pointer">MAX <i class="bi bi-arrow-down-up"></i></th>
-                <th data-label="Unit">UNIT</th>
                 <th data-label="Reading" onclick="sortBy('reading_value')" style="cursor:pointer">Reading <i class="bi bi-arrow-down-up"></i></th>
-                <th data-label="Status">STATUS</th>
-                <th data-label="Tx Cond">Tx Cond</th>
-                <th data-label="Tgl Check">Date Checked</th>
+                <th data-label="Status">Status</th>
                 <th data-label="Aksi">Aksi</th>
               </tr>
             </thead>
@@ -1055,7 +1061,13 @@ function toggleSidebar() {
 // ===== CLOCK =====
 function updateClock() {
   const now = new Date();
-  document.getElementById('currentDateTime').textContent = now.toLocaleString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const formatted = now.toLocaleString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('currentDateTime').textContent = formatted;
+  
+  // Update mobile badge too
+  const mobileBadge = document.getElementById('shiftBadgeMobile');
+  if (mobileBadge) mobileBadge.textContent = document.getElementById('shiftBadge').textContent;
+  
   const h = now.getHours();
   // 2 Shifts: Shift Pagi (07:00-19:00) dan Shift Malam (19:00-07:00)
   const shift = h >= 7 && h < 19 ? 'Shift Pagi' : 'Shift Malam';
@@ -1176,26 +1188,19 @@ function goPage(p) {
     const pct = t.reading_value !== null && t.reading_value !== undefined && t.reading_value !== '' ? Math.min((parseFloat(t.reading_value)/parseFloat(t.max_limit)*100),200).toFixed(1) : null;
     return `<tr>
       <td><input type="checkbox" class="row-check" data-id="${t.id}"></td>
-      <td data-label="No">${t.id}</td>
-      <td data-label="TAG No."><code class="text-secondary">${t.tag_no}</code></td>
       <td data-label="TAG DCS"><code class="text-primary fw-bold">${t.tag_dcs}</code></td>
-      <td data-label="Service" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.service}">${t.service}</td>
-      <td data-label="I/O"><span class="badge ${t.io_loc==='ESD'?'bg-danger':'bg-primary'} bg-opacity-75">${t.io_loc}</span></td>
-      <td data-label="MAX" class="text-end">${fmtNum(t.max_limit)}</td>
-      <td data-label="Unit"><span class="badge bg-light text-dark">${t.unit}</span></td>
+      <td data-label="MAX" class="text-end">${fmtNum(t.max_limit)} <small class="text-muted">${t.unit}</small></td>
       <td data-label="Reading" class="text-end fw-bold ${t.status==='Critical'?'text-danger':t.status==='Warning'?'text-warning':''}">
         ${t.reading_value !== null && t.reading_value !== '' ? fmtNum(t.reading_value) : '<span class="text-muted">-</span>'}
         ${pct ? `<div class="progress progress-mini mt-1" style="width:60px"><div class="progress-bar ${t.status==='Critical'?'bar-critical':t.status==='Warning'?'bar-warning':'bar-normal'}" style="width:${Math.min(pct,100)}%"></div></div>` : ''}
       </td>
       <td data-label="Status">${statusBadge(t.status)}</td>
-      <td data-label="Tx Cond">${t.tx_condition||'-'}</td>
-      <td data-label="Tgl Check">${t.date_checked||'-'}</td>
       <td data-label="Aksi">
-        <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="openInputModal('${t.id}')" title="Input Reading"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="openInputModal('${t.id}')" title="Input"><i class="bi bi-pencil"></i></button>
         <button class="btn btn-sm btn-outline-info py-0 px-2 ms-1" onclick="viewTag('${t.id}')" title="Detail"><i class="bi bi-eye"></i></button>
       </td>
     </tr>`;
-  }).join('') || '<tr><td colspan="13" class="text-center text-muted py-4"><i class="bi bi-search me-2"></i>Tidak ada data ditemukan</td></tr>';
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-search me-2"></i>Tidak ada data</td></tr>';
 
   document.getElementById('tableInfo').textContent = total > 0 ? `Menampilkan ${start+1}-${end} dari ${total} TAG` : 'Tidak ada data';
   document.getElementById('paginationInfo').textContent = `Halaman ${p} dari ${pages}`;
