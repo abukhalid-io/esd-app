@@ -1939,6 +1939,7 @@ function speakCurrentTag() {
     // Wait for cancel to complete
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'id-ID';  // Set Indonesian language directly
       
       // Get available voices
       const voices = window.speechSynthesis.getVoices();
@@ -1986,10 +1987,10 @@ function speakCurrentTag() {
       
       if (selectedVoice) {
         utterance.voice = selectedVoice;
-        utterance.lang = selectedVoice.lang;
+        utterance.lang = 'id-ID';  // Force Indonesian language
         console.log('Using voice:', selectedVoice.name);
       } else {
-        utterance.lang = 'en-US'; // Fallback
+        utterance.lang = 'id-ID'; // Force Indonesian, not English
       }
       
       // Adjust settings for clearer output
