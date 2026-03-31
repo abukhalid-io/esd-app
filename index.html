@@ -1736,10 +1736,16 @@ function initSpeechRecognition() {
   const recognizer = new SpeechRecognition();
   recognizer.continuous = false;
   recognizer.lang = 'id-ID';
-  recognizer.interimResults = true;
+  recognizer.interimResults = false;  // Wait for full result before processing
   recognizer.maxAlternatives = 3;
   
+  // Manual start/stop with timeout
+  let voiceTimeout = null;
+  
   recognizer.onresult = (event) => {
+    // Clear the timeout since we got a result
+    if (voiceTimeout) clearTimeout(voiceTimeout);
+    
     let transcript = '';
     let confidence = 0;
     
@@ -1769,7 +1775,22 @@ function initSpeechRecognition() {
     }
   };
   
+  recognizer.onstart = () => {
+    // Show countdown message
+    showToast('info', '🎤 Mendengarkan... Bicayakan angka (max 10 detik)');
+    
+    // Auto-stop after 10 seconds if no result
+    voiceTimeout = setTimeout(() => {
+      if (isListening) {
+        recognizer.stop();
+        showToast('info', '⏳ Waktu habis, coba lagi.');
+      }
+    }, 10000);
+  };
+  
   recognizer.onend = () => {
+    if (voiceTimeout) clearTimeout(voiceTimeout);
+    voiceTimeout = null;
     isListening = false;
     updateMicButton();
   };
@@ -1870,15 +1891,22 @@ function convertSpokenNumber(text) {
   // Remove any non-alphanumeric except dots and spaces
   text = text.replace(/[^a-z0-9\s.]/g, '');
   
-  // Handle direct number input (e.g., "150")
-  const directNum = parseFloat(text);
-  if (!isNaN(directNum) && text.length > 0) return directNum;
-  
   // Handle "point", "dot", "koma" for decimals - MORE variations
   text = text.replace(/point/g, '.').replace(/koma/g, '.').replace(/dot/g, '.').replace(/[,]/g, '.');
   
-  // Also handle "nol" after decimal (e.g., "seratus koma nol lima" = 100.05)
-  // Replace standalone numbers with their word equivalents
+  // Handle multiple decimals: "seratus koma lima koma tiga" -> keep first
+  const decimalCount = (text.match(/\./g) || []).length;
+  if (decimalCount > 1) {
+    // Keep only first decimal point
+    const parts = text.split('.');
+    text = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  // Handle direct number input (e.g., "150" or "150.5")
+  const directNum = parseFloat(text);
+  if (!isNaN(directNum) && text.length > 0) return directNum;
+  
+  // Clean up spaces
   text = text.replace(/\s+/g, ' ');
   
   // Indonesian number words
