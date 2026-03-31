@@ -668,8 +668,8 @@
               <button type="button" class="btn btn-outline-secondary" onclick="speakCurrentTag()" title="Dengarkan">
                 <i class="bi bi-volume-up"></i>
               </button>
-              <input type="number" id="batchReadingValue" class="form-control form-control-lg text-center" 
-                     placeholder="0" min="0" step="any" oninput="calcBatchStatus()" 
+              <input type="text" inputmode="decimal" id="batchReadingValue" class="form-control form-control-lg text-center" 
+                     placeholder="0" oninput="calcBatchStatus()" 
                      style="font-size: 1.5rem; font-weight: bold;">
               <button type="button" class="btn btn-outline-danger" id="batchMicBtn" onclick="toggleVoiceInput()" title="Voice">
                 <i class="bi bi-mic"></i>
@@ -1768,9 +1768,11 @@ function initSpeechRecognition() {
     
     const numValue = convertSpokenNumber(transcript);
     if (numValue !== null) {
-      document.getElementById('batchReadingValue').value = numValue;
+      // Format number nicely for display
+      const displayValue = Number(numValue).toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+      document.getElementById('batchReadingValue').value = displayValue;
       calcBatchStatus();
-      showToast('success', `✅ Nilai ${numValue} dari suara`);
+      showToast('success', `✅ Nilai ${displayValue} dari suara`);
     } else {
       showToast('warning', `Tidak mengerti: "${transcript}". Coba lagi.`);
     }
@@ -2306,12 +2308,25 @@ function saveBatchReading(action) {
   const tag = batchTags[batchCurrentIndex];
   if (!tag) return;
   
-  const rv = document.getElementById('batchReadingValue').value;
+  // Get value as string then convert to float
+  let rv = document.getElementById('batchReadingValue').value;
+  
+  // Replace comma with dot for float
+  rv = rv.replace(/,/g, '.');
   
   if (action !== 'skip' && (!rv || rv === '')) {
     showToast('warning', 'Reading value wajib diisi!');
     document.getElementById('batchReadingValue').focus();
     return;
+  }
+  
+  // Convert to number
+  if (rv && rv !== '') {
+    rv = parseFloat(rv);
+    if (isNaN(rv)) {
+      showToast('warning', 'Nilai tidak valid!');
+      return;
+    }
   }
   
   if (action === 'skip') {
